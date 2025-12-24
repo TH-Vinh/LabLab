@@ -5,6 +5,5 @@ import com.example.springmvc.dto.UserProfileResponse;
 
 public interface UserService {
     UserProfileResponse getCurrentUser();
-
     UserProfileResponse updateProfile(UpdateProfileRequest request);
 }

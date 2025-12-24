@@ -16,12 +16,11 @@ public class UserController {
 
     @GetMapping("/profile")
     public ResponseEntity<UserProfileResponse> getCurrentProfile() {
-        UserProfileResponse profile = userService.getCurrentUser();
-        return ResponseEntity.ok(profile);
+        return ResponseEntity.ok(userService.getCurrentUser());
     }
-    @PutMapping("/profile")
+
+    @PatchMapping("/profile")
     public ResponseEntity<UserProfileResponse> updateProfile(@RequestBody UpdateProfileRequest request) {
-        UserProfileResponse updatedProfile = userService.updateProfile(request);
-        return ResponseEntity.ok(updatedProfile);
+        return ResponseEntity.ok(userService.updateProfile(request));
     }
 }

@@ -11,6 +11,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
+import java.io.IOException;
+import java.nio.file.*;
+import java.util.Base64;
+import java.util.UUID;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -21,46 +28,77 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private UserMapper userMapper;
 
+    private final Path rootPath = Paths.get("uploads/avatars");
+
     @Override
     public UserProfileResponse getCurrentUser() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String currentUsername = auth.getName();
-
-        User user = userRepository.findByUsernameWithProfile(currentUsername);
-
-        if (user == null) {
-            throw new RuntimeException("Không tìm thấy người dùng: " + currentUsername);
-        }
-        return userMapper.toProfileDto(user);
+        return userMapper.toProfileDto(getAuthenticatedUser());
     }
 
     @Override
-    @org.springframework.transaction.annotation.Transactional
+    @Transactional
     public UserProfileResponse updateProfile(UpdateProfileRequest request) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String currentUsername = auth.getName();
-
-        User user = userRepository.findByUsernameWithProfile(currentUsername);
-        if (user == null) throw new RuntimeException("User not found");
-
+        User user = getAuthenticatedUser();
         Profile profile = user.getProfile();
-        if (profile == null) {
-            profile = new Profile();
-            profile.setUser(user);
-            user.setProfile(profile);
-        }
 
-        if (request.getFullName() != null) {
-            profile.setFullName(request.getFullName());
-        }
-        if (request.getPhoneNumber() != null) {
-            profile.setPhoneNumber(request.getPhoneNumber());
-        }
-        if (request.getAvatar() != null) {
-            profile.setAvatar(request.getAvatar());
+        updatePersonalInfo(profile, request);
+
+        if (StringUtils.hasText(request.getAvatar())) {
+            updateAvatar(profile, request.getAvatar());
         }
 
         userRepository.save(user);
         return userMapper.toProfileDto(user);
+    }
+
+    private User getAuthenticatedUser() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        User user = userRepository.findByUsernameWithProfile(username);
+
+        if (user == null) throw new RuntimeException("User not found");
+        if (user.getProfile() == null) {
+            Profile newProfile = new Profile();
+            newProfile.setUser(user);
+            user.setProfile(newProfile);
+        }
+        return user;
+    }
+
+    private void updatePersonalInfo(Profile profile, UpdateProfileRequest request) {
+        if (StringUtils.hasText(request.getFullName())) {
+            profile.setFullName(request.getFullName().trim());
+        }
+        if (StringUtils.hasText(request.getPhoneNumber())) {
+            profile.setPhoneNumber(request.getPhoneNumber().trim());
+        }
+    }
+
+    private void updateAvatar(Profile profile, String base64Data) {
+        if (!base64Data.startsWith("data:image")) return;
+
+        try {
+            if (!Files.exists(rootPath)) Files.createDirectories(rootPath);
+
+            String[] parts = base64Data.split(",");
+            String imageString = parts[1];
+            String extension = parts[0].contains("jpeg") || parts[0].contains("jpg") ? ".jpg" : ".png";
+
+            byte[] imageBytes = Base64.getDecoder().decode(imageString);
+            String newFileName = UUID.randomUUID().toString() + extension;
+
+            Files.write(rootPath.resolve(newFileName), imageBytes);
+
+            if (StringUtils.hasText(profile.getAvatar())) {
+                try { Files.deleteIfExists(rootPath.resolve(profile.getAvatar())); }
+                catch (IOException ignored) {}
+            }
+
+            profile.setAvatar(newFileName);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Lỗi lưu ảnh đại diện");
+        }
     }
 }

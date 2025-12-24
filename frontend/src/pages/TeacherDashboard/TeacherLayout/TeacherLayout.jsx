@@ -10,13 +10,21 @@ import {
   Settings,
   LogOut,
 } from "lucide-react";
-
+import api from "../../../services/api";
 import "./TeacherLayout.css";
 
 const TeacherLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const user = localStorage.getItem("user") || "GV";
+
+  const [avatarUrl, setAvatarUrl] = useState(
+    localStorage.getItem("user_avatar")
+  );
+  const [currentUser, setCurrentUser] = useState(
+    localStorage.getItem("user") || "GV"
+  );
+
+  const [imgError, setImgError] = useState(false);
 
   const [showNotiMenu, setShowNotiMenu] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -25,12 +33,54 @@ const TeacherLayout = () => {
   const menuRef = useRef(null);
   const searchInputRef = useRef(null);
 
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        const response = await api.get("/users/profile", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (response.data) {
+          if (response.data.avatar) {
+            setAvatarUrl(response.data.avatar);
+            localStorage.setItem("user_avatar", response.data.avatar);
+
+            setImgError(false);
+          }
+          if (response.data.fullName) {
+            setCurrentUser(response.data.fullName);
+            localStorage.setItem("user", response.data.fullName);
+          }
+        }
+      } catch (err) {
+        console.error("Lỗi tải header:", err);
+      }
+    };
+
+    fetchUserProfile();
+
+    const handleUserUpdate = () => {
+      setAvatarUrl(localStorage.getItem("user_avatar"));
+      setCurrentUser(localStorage.getItem("user") || "GV");
+
+      setImgError(false);
+    };
+
+    window.addEventListener("user_update", handleUserUpdate);
+
+    return () => {
+      window.removeEventListener("user_update", handleUserUpdate);
+    };
+  }, []);
+
   const handleQuickSearch = (e) => {
     if (e.key === "Enter" && quickSearchValue.trim() !== "") {
       navigate(
         `/teacher/wiki?keyword=${encodeURIComponent(quickSearchValue.trim())}`
       );
-
       setQuickSearchValue("");
       setIsSearchOpen(false);
     }
@@ -129,7 +179,6 @@ const TeacherLayout = () => {
                 onKeyDown={handleQuickSearch}
               />
             </div>
-
             <button
               className="icon-btn search-btn-trigger"
               onClick={toggleSearch}
@@ -142,7 +191,6 @@ const TeacherLayout = () => {
             </button>
           </div>
 
-          {/* Thông báo */}
           <div style={{ position: "relative" }}>
             <button
               className={`icon-btn ${showNotiMenu ? "active" : ""}`}
@@ -151,7 +199,6 @@ const TeacherLayout = () => {
               <Bell size={22} color="#333" strokeWidth={2} />
               <span className="badge-dot"></span>
             </button>
-
             {showNotiMenu && (
               <div className="dropdown-menu">
                 <div className="dropdown-header">Thông báo mới</div>
@@ -185,22 +232,45 @@ const TeacherLayout = () => {
             )}
           </div>
 
-          {/* User Profile */}
           <div style={{ position: "relative" }}>
             <div
               className={`user-avatar ${showUserMenu ? "active" : ""}`}
               onClick={toggleUser}
+              style={{
+                overflow: "hidden",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
             >
-              {user.charAt(0).toUpperCase()}
+              {avatarUrl && !imgError ? (
+                <img
+                  src={`http://localhost:8080/springmvc/avatars/${avatarUrl}`}
+                  alt="User"
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  onError={() => setImgError(true)}
+                />
+              ) : (
+                <User size={24} strokeWidth={2} color="#ffffff" />
+              )}
             </div>
 
             {showUserMenu && (
               <div className="dropdown-menu">
-                <div className="dropdown-header">Tài khoản: {user}</div>
-                <div className="dropdown-item" onClick={() => { navigate("/teacher/profile"); setShowUserMenu(false); }}>
+                <div className="dropdown-header">Tài khoản: {currentUser}</div>
+                <div
+                  className="dropdown-item"
+                  onClick={() => {
+                    navigate("/teacher/profile");
+                    setShowUserMenu(false);
+                  }}
+                >
                   <User size={18} /> Hồ sơ cá nhân
                 </div>
-                <div className="dropdown-item" onClick={() => navigate("/teacher/settings")}>
+                <div
+                  className="dropdown-item"
+                  onClick={() => navigate("/teacher/settings")}
+                >
                   <Settings size={18} /> Cài đặt
                 </div>
                 <div
@@ -215,7 +285,6 @@ const TeacherLayout = () => {
           </div>
         </div>
       </header>
-
       <main className="container-max">
         <Outlet />
       </main>

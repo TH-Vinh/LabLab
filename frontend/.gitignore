@@ -23,4 +23,4 @@ dist-ssr
 *.sln
 *.sw?
 
-src/services/app.js
+src/services/api.js

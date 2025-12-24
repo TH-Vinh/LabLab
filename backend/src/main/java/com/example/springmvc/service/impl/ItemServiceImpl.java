@@ -2,12 +2,15 @@ package com.example.springmvc.service.impl;
 
 import com.example.springmvc.dto.ItemResponse;
 import com.example.springmvc.entity.Item;
-import com.example.springmvc.mapper.ItemMapper; // Import Mapper mới
+import com.example.springmvc.mapper.ItemMapper;
 import com.example.springmvc.repository.ItemRepository;
 import com.example.springmvc.service.ItemService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -21,19 +24,43 @@ public class ItemServiceImpl implements ItemService {
     private ItemMapper itemMapper;
 
     @Override
+    @Transactional(readOnly = true)
     public List<ItemResponse> searchItems(String category, String keyword) {
-        List<Item> items;
 
-        if (keyword != null && !keyword.trim().isEmpty()) {
-            items = itemRepository.searchByNameOrFormula(keyword.trim());
-        } else if (category != null && !category.equalsIgnoreCase("ALL")) {
-            items = itemRepository.findByCategoryType(category);
-        } else {
-            items = itemRepository.findAll();
+        List<Item> rawItems = queryItems(category, keyword);
+
+        return convertToDtoList(rawItems);
+    }
+
+    private List<Item> queryItems(String category, String keyword) {
+        boolean hasKeyword = StringUtils.hasText(keyword);
+        boolean hasCategory = isValidCategory(category);
+
+        if (hasCategory && hasKeyword) {
+            return itemRepository.searchByCategoryAndKeyword(category.trim(), keyword.trim());
+        }
+
+        if (hasKeyword) {
+            return itemRepository.searchGlobal(keyword.trim());
+        }
+
+        if (hasCategory) {
+            return itemRepository.findByCategoryType(category.trim());
+        }
+
+        return itemRepository.findAll();
+    }
+
+    private List<ItemResponse> convertToDtoList(List<Item> items) {
+        if (items == null || items.isEmpty()) {
+            return Collections.emptyList();
         }
         return items.stream()
                 .map(itemMapper::toDto)
                 .collect(Collectors.toList());
     }
 
+    private boolean isValidCategory(String category) {
+        return StringUtils.hasText(category) && !category.equalsIgnoreCase("ALL");
+    }
 }
