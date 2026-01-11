@@ -1,26 +1,19 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login/Login";
-<<<<<<< HEAD
 import AdminLayout from "./pages/AdminDashboard/AdminLayout";
 import AdminOverview from "./pages/AdminDashboard/AdminOverview";
 import AdminRentTickets from "./pages/AdminDashboard/AdminRentTickets";
 import AdminChemicals from "./pages/AdminDashboard/AdminChemicals";
 import AdminDevices from "./pages/AdminDashboard/AdminDevices";
 import AdminUsers from "./pages/AdminDashboard/AdminUsers";
-=======
-import AdminDashboard from "./pages/AdminDashboard/AdminDashboard";
->>>>>>> origin/main
 
 import TeacherLayout from "./pages/TeacherDashboard/TeacherLayout/TeacherLayout";
 import TeacherHome from "./pages/TeacherDashboard/TeacherHome/TeacherHome";
 import TeacherWiki from "./pages/TeacherDashboard/TeacherWiki/TeacherWiki";
 import TeacherBorrow from "./pages/TeacherDashboard/TeacherBorrow/TeacherBorrow";
 import TeacherReport from "./pages/TeacherDashboard/TeacherReport/TeacherReport";
-<<<<<<< HEAD
-=======
 import TeacherProfile from "./pages/TeacherDashboard/TeacherProfile/TeacherProfile";
 import TeacherSettings from './pages/TeacherDashboard/TeacherSettings/TeacherSettings';
->>>>>>> origin/main
 
 const PrivateRoute = ({ children, requiredRole }) => {
   const token = localStorage.getItem("token");
@@ -58,11 +51,8 @@ function App() {
           <Route path="wiki" element={<TeacherWiki />} />
           <Route path="borrow" element={<TeacherBorrow />} />
           <Route path="report" element={<TeacherReport />} />
-<<<<<<< HEAD
-=======
           <Route path="profile" element={<TeacherProfile />} />
           <Route path="settings" element={<TeacherSettings />} />
->>>>>>> origin/main
         </Route>
 
         {/* Route cho Admin */}
@@ -70,7 +60,6 @@ function App() {
           path="/admin"
           element={
             <PrivateRoute requiredRole="ROLE_ADMIN">
-<<<<<<< HEAD
               <AdminLayout />
             </PrivateRoute>
           }
@@ -82,12 +71,6 @@ function App() {
           <Route path="devices" element={<AdminDevices />} />
           <Route path="users" element={<AdminUsers />} />
         </Route>
-=======
-              <AdminDashboard />
-            </PrivateRoute>
-          }
-        />
->>>>>>> origin/main
       </Routes>
     </BrowserRouter>
   );

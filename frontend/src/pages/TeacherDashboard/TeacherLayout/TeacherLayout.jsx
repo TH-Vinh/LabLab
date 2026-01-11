@@ -10,28 +10,12 @@ import {
   Settings,
   LogOut,
 } from "lucide-react";
-<<<<<<< HEAD
-
-=======
 import api from "../../../services/api";
->>>>>>> origin/main
 import "./TeacherLayout.css";
 
 const TeacherLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
-<<<<<<< HEAD
-  const user = localStorage.getItem("user") || "GV";
-
-  const [showNotiMenu, setShowNotiMenu] = useState(false);
-  const [showUserMenu, setShowUserMenu] = useState(false);
-
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-
-  const menuRef = useRef(null);
-  const searchInputRef = useRef(null);
-
-=======
 
   const [avatarUrl, setAvatarUrl] = useState(
     localStorage.getItem("user_avatar")
@@ -102,7 +86,6 @@ const TeacherLayout = () => {
     }
   };
 
->>>>>>> origin/main
   const handleLogout = () => {
     localStorage.clear();
     navigate("/login");
@@ -191,17 +174,11 @@ const TeacherLayout = () => {
                 ref={searchInputRef}
                 type="text"
                 placeholder="Tra cứu nhanh hóa chất..."
-<<<<<<< HEAD
-              />
-            </div>
-
-=======
                 value={quickSearchValue}
                 onChange={(e) => setQuickSearchValue(e.target.value)}
                 onKeyDown={handleQuickSearch}
               />
             </div>
->>>>>>> origin/main
             <button
               className="icon-btn search-btn-trigger"
               onClick={toggleSearch}
@@ -222,10 +199,6 @@ const TeacherLayout = () => {
               <Bell size={22} color="#333" strokeWidth={2} />
               <span className="badge-dot"></span>
             </button>
-<<<<<<< HEAD
-
-=======
->>>>>>> origin/main
             {showNotiMenu && (
               <div className="dropdown-menu">
                 <div className="dropdown-header">Thông báo mới</div>
@@ -263,10 +236,6 @@ const TeacherLayout = () => {
             <div
               className={`user-avatar ${showUserMenu ? "active" : ""}`}
               onClick={toggleUser}
-<<<<<<< HEAD
-            >
-              {user.charAt(0).toUpperCase()}
-=======
               style={{
                 overflow: "hidden",
                 display: "flex",
@@ -284,18 +253,10 @@ const TeacherLayout = () => {
               ) : (
                 <User size={24} strokeWidth={2} color="#ffffff" />
               )}
->>>>>>> origin/main
             </div>
 
             {showUserMenu && (
               <div className="dropdown-menu">
-<<<<<<< HEAD
-                <div className="dropdown-header">Tài khoản: {user}</div>
-                <div className="dropdown-item">
-                  <User size={18} /> Hồ sơ cá nhân
-                </div>
-                <div className="dropdown-item">
-=======
                 <div className="dropdown-header">Tài khoản: {currentUser}</div>
                 <div
                   className="dropdown-item"
@@ -310,7 +271,6 @@ const TeacherLayout = () => {
                   className="dropdown-item"
                   onClick={() => navigate("/teacher/settings")}
                 >
->>>>>>> origin/main
                   <Settings size={18} /> Cài đặt
                 </div>
                 <div
@@ -325,10 +285,6 @@ const TeacherLayout = () => {
           </div>
         </div>
       </header>
-<<<<<<< HEAD
-
-=======
->>>>>>> origin/main
       <main className="container-max">
         <Outlet />
       </main>

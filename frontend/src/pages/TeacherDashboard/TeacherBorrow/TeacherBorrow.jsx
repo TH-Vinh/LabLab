@@ -1,13 +1,3 @@
-<<<<<<< HEAD
-import React from "react";
-const TeacherBorrow = () => (
-  <div className="simple-banner">
-    <h3>📝 Trang Mượn Thiết Bị</h3>
-    <p>Form đăng ký sẽ nằm ở đây...</p>
-  </div>
-);
-export default TeacherBorrow;
-=======
 import React, { useState, useMemo } from "react";
 import {
   ClipboardCheck,
@@ -27,6 +17,7 @@ import {
   MapPin,
   Activity,
   CheckCircle,
+  FileText,
 } from "lucide-react";
 import Swal from "sweetalert2";
 import api from "../../../services/api";
@@ -403,7 +394,3 @@ const TeacherBorrow = () => {
 };
 
 export default TeacherBorrow;
-
-// Biến FileText chưa được import trong Lucide, hãy đảm bảo import từ lucide-react
-import { FileText } from "lucide-react";
->>>>>>> origin/main

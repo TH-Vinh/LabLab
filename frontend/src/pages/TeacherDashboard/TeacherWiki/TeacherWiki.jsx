@@ -1,9 +1,5 @@
 import React, { useState, useEffect } from "react";
-<<<<<<< HEAD
-// Import axios instance từ folder services của bạn
-=======
 import { useSearchParams } from "react-router-dom";
->>>>>>> origin/main
 import api from "../../../services/api";
 
 import {
@@ -21,46 +17,30 @@ import {
 import "./TeacherWiki.css";
 
 const TeacherWiki = () => {
-<<<<<<< HEAD
-  const [items, setItems] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
-=======
   const [searchParams] = useSearchParams();
   const queryKeyword = searchParams.get("keyword") || "";
 
   const [items, setItems] = useState([]);
   const [searchTerm, setSearchTerm] = useState(queryKeyword);
->>>>>>> origin/main
   const [activeTab, setActiveTab] = useState("all");
   const [selectedItem, setSelectedItem] = useState(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-<<<<<<< HEAD
-=======
     if (queryKeyword) {
       setSearchTerm(queryKeyword);
     }
   }, [queryKeyword]);
 
   useEffect(() => {
->>>>>>> origin/main
     const handleKeyDown = (event) => {
       if (event.key === "Escape") {
         handleCloseDetail();
       }
     };
-<<<<<<< HEAD
-
     if (selectedItem) {
       window.addEventListener("keydown", handleKeyDown);
     }
-
-=======
-    if (selectedItem) {
-      window.addEventListener("keydown", handleKeyDown);
-    }
->>>>>>> origin/main
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };

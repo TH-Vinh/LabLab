@@ -14,12 +14,21 @@ import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
+import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.templatemode.TemplateMode;
+import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 
 import javax.sql.DataSource;
 import java.util.Properties;
+import java.util.concurrent.Executor;
 
 @Configuration
 @EnableTransactionManagement
+@EnableAsync
 @PropertySource("classpath:app.properties")
 @ComponentScan(
         basePackages = "com.example.springmvc",
@@ -92,5 +101,50 @@ public class AppConfig {
         properties.put("hibernate.format_sql", "true");
         properties.put("hibernate.hbm2ddl.auto", "update");
         return properties;
+    }
+
+    @Bean
+    public JavaMailSender javaMailSender() {
+        JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
+        
+        // Cấu hình SMTP server (có thể lấy từ properties hoặc dùng default)
+        mailSender.setHost(env.getProperty("mail.host", "smtp.gmail.com"));
+        mailSender.setPort(Integer.parseInt(env.getProperty("mail.port", "587")));
+        mailSender.setUsername(env.getProperty("mail.username", ""));
+        mailSender.setPassword(env.getProperty("mail.password", ""));
+
+        Properties props = mailSender.getJavaMailProperties();
+        props.put("mail.transport.protocol", "smtp");
+        props.put("mail.smtp.auth", "true");
+        props.put("mail.smtp.starttls.enable", "true");
+        props.put("mail.smtp.starttls.required", "true");
+        props.put("mail.debug", env.getProperty("mail.debug", "false"));
+
+        return mailSender;
+    }
+
+    @Bean(name = "mailExecutor")
+    public Executor mailExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(2);
+        executor.setMaxPoolSize(5);
+        executor.setQueueCapacity(100);
+        executor.setThreadNamePrefix("mail-");
+        executor.initialize();
+        return executor;
+    }
+
+    @Bean
+    public TemplateEngine templateEngine() {
+        ClassLoaderTemplateResolver templateResolver = new ClassLoaderTemplateResolver();
+        templateResolver.setPrefix("templates/");
+        templateResolver.setSuffix(".html");
+        templateResolver.setTemplateMode(TemplateMode.HTML);
+        templateResolver.setCharacterEncoding("UTF-8");
+        templateResolver.setCacheable(false); // Set to false for development, true for production
+
+        TemplateEngine templateEngine = new TemplateEngine();
+        templateEngine.setTemplateResolver(templateResolver);
+        return templateEngine;
     }
 }
