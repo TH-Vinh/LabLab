@@ -13,5 +13,7 @@ public interface ItemRepository extends JpaRepository<Item, Integer> {
     // Tìm kiếm theo loại (CHEMICAL, DEVICE, TOOL)
     List<Item> findByCategoryType(String categoryType);
 
+    // Tìm kiếm theo tên (và formula nếu là Chemical - xử lý trong service layer)
+    @Query("SELECT i FROM Item i WHERE LOWER(i.name) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     List<Item> searchByNameOrFormula(@Param("keyword") String keyword);
 }

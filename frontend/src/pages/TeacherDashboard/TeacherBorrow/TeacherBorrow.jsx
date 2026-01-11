@@ -17,10 +17,7 @@ import {
   MapPin,
   Activity,
   CheckCircle,
-<<<<<<< HEAD
   FileText,
-=======
->>>>>>> a90f4ec487a7456d1438595f75520a34fda69c41
 } from "lucide-react";
 import Swal from "sweetalert2";
 import api from "../../../services/api";
@@ -397,9 +394,3 @@ const TeacherBorrow = () => {
 };
 
 export default TeacherBorrow;
-<<<<<<< HEAD
-=======
-
-// Biến FileText chưa được import trong Lucide, hãy đảm bảo import từ lucide-react
-import { FileText } from "lucide-react";
->>>>>>> a90f4ec487a7456d1438595f75520a34fda69c41
