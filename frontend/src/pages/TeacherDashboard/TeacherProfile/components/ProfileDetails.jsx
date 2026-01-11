@@ -1,5 +1,13 @@
 import React from "react";
-import { User, Home } from "lucide-react";
+import {
+  User,
+  Home,
+  Phone,
+  Mail,
+  BookOpen,
+  Award,
+  Activity,
+} from "lucide-react";
 import "./ProfileDetails.css";
 
 const ProfileDetails = ({ profile, isEditing, formData, onInputChange }) => {
@@ -11,7 +19,9 @@ const ProfileDetails = ({ profile, isEditing, formData, onInputChange }) => {
         </h3>
 
         <div className="detail-item">
-          <label>Họ và tên</label>
+          <label>
+            <User size={14} style={{ marginRight: 6 }} /> Họ và tên
+          </label>
           {isEditing ? (
             <input
               className="edit-input"
@@ -25,7 +35,9 @@ const ProfileDetails = ({ profile, isEditing, formData, onInputChange }) => {
         </div>
 
         <div className="detail-item">
-          <label>Số điện thoại</label>
+          <label>
+            <Phone size={14} style={{ marginRight: 6 }} /> Số điện thoại
+          </label>
           {isEditing ? (
             <input
               className="edit-input"
@@ -39,7 +51,9 @@ const ProfileDetails = ({ profile, isEditing, formData, onInputChange }) => {
         </div>
 
         <div className="detail-item">
-          <label>Email liên hệ</label>
+          <label>
+            <Mail size={14} style={{ marginRight: 6 }} /> Email liên hệ
+          </label>
           <p>{profile.email || "Chưa cập nhật"}</p>
         </div>
       </div>
@@ -49,15 +63,21 @@ const ProfileDetails = ({ profile, isEditing, formData, onInputChange }) => {
           <Home size={18} /> Đơn vị công tác
         </h3>
         <div className="detail-item">
-          <label>Khoa</label>
+          <label>
+            <Award size={14} style={{ marginRight: 6 }} /> Khoa
+          </label>
           <p>{profile.faculty || "Chưa cập nhật"}</p>
         </div>
         <div className="detail-item">
-          <label>Bộ môn</label>
+          <label>
+            <BookOpen size={14} style={{ marginRight: 6 }} /> Bộ môn
+          </label>
           <p>{profile.department || "Chưa cập nhật"}</p>
         </div>
         <div className="detail-item">
-          <label>Trạng thái</label>
+          <label>
+            <Activity size={14} style={{ marginRight: 6 }} /> Trạng thái
+          </label>
           <p className="status-online">Đang hoạt động</p>
         </div>
       </div>

@@ -58,3 +58,64 @@ body {
 @media (max-width: 768px) {
   .profile-container { padding: 1rem; }
 }
+
+.toast-notification {
+  position: fixed;
+  top: 90px;
+  right: 20px;
+  padding: 16px 24px;
+  border-radius: 12px;
+  background: white;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 9999;
+  min-width: 300px;
+  animation: slideInRight 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+  border-left: 6px solid transparent;
+}
+
+.toast-success {
+  border-left-color: #10b981;
+}
+.toast-success .toast-icon {
+  color: #10b981;
+  background: #d1fae5;
+}
+
+.toast-error {
+  border-left-color: #ef4444;
+}
+.toast-error .toast-icon {
+  color: #ef4444;
+  background: #fee2e2;
+}
+
+.toast-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.toast-content h4 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.toast-content p {
+  margin: 4px 0 0;
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}

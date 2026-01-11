@@ -7,20 +7,25 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.FilterType;
-import org.springframework.context.annotation.PropertySource; // Import mới
-import org.springframework.core.env.Environment; // Import mới
+import org.springframework.context.annotation.PropertySource;
+import org.springframework.core.env.Environment;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.templatemode.TemplateMode;
+import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 
 import javax.sql.DataSource;
 import java.util.Properties;
 
 @Configuration
 @EnableTransactionManagement
-@PropertySource("classpath:app.properties")
+@PropertySource("classpath:/app.properties")
 @ComponentScan(
         basePackages = "com.example.springmvc",
         excludeFilters = @ComponentScan.Filter(
@@ -32,7 +37,7 @@ import java.util.Properties;
 public class AppConfig {
 
     @Autowired
-    private Environment env; // 2. Biến môi trường để lấy giá trị
+    private Environment env;
 
     @Bean
     public DataSource dataSource() {
@@ -44,7 +49,7 @@ public class AppConfig {
 
         // --- TỐI ƯU HÓA HIỆU NĂNG ---
 
-        // 1. Số lượng kết nối (Cloud free tier thường giới hạn, đừng set cao quá)
+        // 1. Số lượng kết nối
         dataSource.setMinimumIdle(2); // Giữ ít nhất 2 kết nối rảnh
         dataSource.setMaximumPoolSize(10); // Tối đa 10 kết nối (đủ cho dev)
 
@@ -53,7 +58,7 @@ public class AppConfig {
         dataSource.setIdleTimeout(300000);      // 5 phút rảnh thì đóng bớt
         dataSource.setMaxLifetime(1800000);     // 30 phút refresh kết nối 1 lần
 
-        // 3. CACHE (Cực quan trọng để tăng tốc Query)
+        // 3. CACHE
         // Giúp lưu lại các câu lệnh SQL đã biên dịch, lần sau chạy sẽ cực nhanh
         dataSource.addDataSourceProperty("cachePrepStmts", "true");
         dataSource.addDataSourceProperty("prepStmtCacheSize", "250");
@@ -92,5 +97,44 @@ public class AppConfig {
         properties.put("hibernate.format_sql", "true");
         properties.put("hibernate.hbm2ddl.auto", "update");
         return properties;
+    }
+
+    @Bean
+    public JavaMailSender getJavaMailSender() {
+        JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
+
+        // Nếu không tìm thấy mail.host, nó sẽ dùng "smtp.sendgrid.net"
+        mailSender.setHost(env.getProperty("mail.host", "smtp.sendgrid.net"));
+
+        // Nếu không tìm thấy port, nó dùng 587
+        mailSender.setPort(Integer.parseInt(env.getProperty("mail.port", "587")));
+
+        mailSender.setUsername(env.getProperty("mail.username"));
+        mailSender.setPassword(env.getProperty("mail.password"));
+
+        Properties props = mailSender.getJavaMailProperties();
+        props.put("mail.transport.protocol", "smtp");
+        props.put("mail.smtp.auth", "true");
+        props.put("mail.smtp.starttls.enable", "true");
+        props.put("mail.debug", "true");
+
+        return mailSender;
+    }
+    @Bean
+    public ClassLoaderTemplateResolver templateResolver() {
+        ClassLoaderTemplateResolver resolver = new ClassLoaderTemplateResolver();
+        resolver.setPrefix("templates/"); // Thư mục chứa file html trong resources
+        resolver.setSuffix(".html");
+        resolver.setTemplateMode(TemplateMode.HTML);
+        resolver.setCharacterEncoding("UTF-8");
+        resolver.setCacheable(false); // Tắt cache khi đang dev để cập nhật giao diện nhanh
+        return resolver;
+    }
+
+    @Bean
+    public TemplateEngine templateEngine() {
+        TemplateEngine engine = new TemplateEngine();
+        engine.setTemplateResolver(templateResolver());
+        return engine;
     }
 }

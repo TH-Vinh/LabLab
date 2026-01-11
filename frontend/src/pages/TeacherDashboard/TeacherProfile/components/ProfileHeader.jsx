@@ -1,5 +1,5 @@
 import React from "react";
-import { Shield, Camera } from "lucide-react";
+import { Shield, Camera, User } from "lucide-react";
 import "./ProfileHeader.css";
 
 const ProfileHeader = ({
@@ -21,7 +21,7 @@ const ProfileHeader = ({
           />
         ) : (
           <div className="avatar-placeholder">
-            {profile.fullName ? profile.fullName.charAt(0).toUpperCase() : "U"}
+            <User size={64} color="#1e40af" strokeWidth={1.5} />
           </div>
         )}
 
@@ -34,7 +34,6 @@ const ProfileHeader = ({
               accept="image/*"
               onChange={onFileChange}
             />
-
             <label htmlFor="upload-avatar-input" className="btn-upload-icon">
               <Camera size={18} strokeWidth={2.5} />
             </label>
