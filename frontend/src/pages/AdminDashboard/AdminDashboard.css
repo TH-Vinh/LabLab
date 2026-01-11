@@ -1,0 +1,85 @@
+/* Layout chung */
+.admin-container {
+    display: flex;
+    min-height: 100vh;
+    background-color: #f0f2f5;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+/* Sidebar Tối màu (Dark Mode Style) */
+.admin-sidebar {
+    width: 260px;
+    background: #1e293b; /* Màu xanh đen */
+    color: white;
+    display: flex;
+    flex-direction: column;
+}
+
+.admin-brand {
+    height: 60px;
+    display: flex;
+    align-items: center;
+    padding-left: 20px;
+    font-size: 18px;
+    font-weight: bold;
+    border-bottom: 1px solid #334155;
+    color: #60a5fa; /* Xanh sáng */
+}
+
+.admin-menu-item {
+    padding: 15px 20px;
+    cursor: pointer;
+    color: #cbd5e1;
+    transition: 0.2s;
+}
+
+.admin-menu-item:hover, .admin-menu-item.active {
+    background: #334155;
+    color: white;
+    border-left: 4px solid #60a5fa;
+}
+
+/* Nội dung chính */
+.admin-main {
+    flex: 1;
+    padding: 30px;
+}
+
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 30px;
+}
+
+.btn-admin-logout {
+    background: #ef4444; /* Đỏ */
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+/* Thống kê hệ thống */
+.admin-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.stat-box {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    border-top: 3px solid #60a5fa;
+}
+
+/* Nút Duyệt/Hủy */
+.btn-approve {
+    background: #10b981; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; margin-right: 5px;
+}
+.btn-reject {
+    background: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;
+}
