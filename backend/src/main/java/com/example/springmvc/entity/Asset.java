@@ -27,4 +27,11 @@ public class Asset extends Item {
     @Column(name = "status_detail")
     private String statusDetail;
 
+    private String supplier;
+
+    @Column(name = "storage_location")
+    private String storageLocation;
+
+    @Column(name = "original_price")
+    private BigDecimal originalPrice;
 }

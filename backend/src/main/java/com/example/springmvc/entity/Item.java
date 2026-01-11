@@ -1,5 +1,4 @@
 package com.example.springmvc.entity;
-
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -10,9 +9,9 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "items")
-@Inheritance(strategy = InheritanceType.JOINED)
+@Inheritance(strategy = InheritanceType.JOINED) // Quan trọng: Chiến lược nối bảng
 @Data
-public abstract class Item {
+public abstract class Item { // Abstract vì không ai tạo một "Item" chung chung
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,7 +25,7 @@ public abstract class Item {
     private String name;
 
     @Column(name = "category_type", nullable = false)
-    private String categoryType;
+    private String categoryType; // CHEMICAL, DEVICE, TOOL
 
     private String unit;
 
@@ -39,16 +38,9 @@ public abstract class Item {
     @Column(name = "year_in_use")
     private Integer yearInUse;
 
-    private String supplier;
-
-    @Column(name = "storage_location")
-    private String storageLocation;
-
-    @Column(name = "original_price")
-    private BigDecimal originalPrice;
-
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
+
 }

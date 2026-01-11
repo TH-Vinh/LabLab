@@ -3,7 +3,7 @@ package com.example.springmvc.controller;
 import com.example.springmvc.dto.*;
 import com.example.springmvc.service.UserService;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,10 +11,12 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")
-@RequiredArgsConstructor
 public class UserController {
 
-    private final UserService userService;
+    @Autowired
+    private UserService userService;
+
+    // --- QUẢN LÝ THÔNG TIN CÁ NHÂN (PROFILE) ---
 
     @GetMapping("/profile")
     public ResponseEntity<UserProfileResponse> getCurrentProfile() {
@@ -26,6 +28,8 @@ public class UserController {
         return ResponseEntity.ok(userService.updateProfile(request));
     }
 
+    // --- ĐỔI MẬT KHẨU & OTP XÁC THỰC ---
+
     @PostMapping("/send-otp")
     public ResponseEntity<?> sendOtp() {
         userService.sendOtp();
@@ -34,6 +38,7 @@ public class UserController {
 
     @PostMapping("/change-password")
     public ResponseEntity<?> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
+        // Thực hiện đổi mật khẩu kèm xác thực OTP nếu có
         userService.changePassword(request);
         return ResponseEntity.ok(Map.of("message", "Đổi mật khẩu thành công!"));
     }

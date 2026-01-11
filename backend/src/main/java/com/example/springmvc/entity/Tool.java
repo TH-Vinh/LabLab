@@ -24,4 +24,11 @@ public class Tool extends Item {
     @Column(name = "liquidation_proposal")
     private Boolean liquidationProposal;
 
+    private String supplier;
+
+    @Column(name = "storage_location")
+    private String storageLocation;
+
+    @Column(name = "original_price")
+    private BigDecimal originalPrice;
 }
