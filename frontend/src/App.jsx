@@ -1,11 +1,15 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login/Login";
+<<<<<<< HEAD
 import AdminLayout from "./pages/AdminDashboard/AdminLayout";
 import AdminOverview from "./pages/AdminDashboard/AdminOverview";
 import AdminRentTickets from "./pages/AdminDashboard/AdminRentTickets";
 import AdminChemicals from "./pages/AdminDashboard/AdminChemicals";
 import AdminDevices from "./pages/AdminDashboard/AdminDevices";
 import AdminUsers from "./pages/AdminDashboard/AdminUsers";
+=======
+import AdminDashboard from "./pages/AdminDashboard/AdminDashboard";
+>>>>>>> a90f4ec487a7456d1438595f75520a34fda69c41
 
 import TeacherLayout from "./pages/TeacherDashboard/TeacherLayout/TeacherLayout";
 import TeacherHome from "./pages/TeacherDashboard/TeacherHome/TeacherHome";
@@ -60,6 +64,7 @@ function App() {
           path="/admin"
           element={
             <PrivateRoute requiredRole="ROLE_ADMIN">
+<<<<<<< HEAD
               <AdminLayout />
             </PrivateRoute>
           }
@@ -71,6 +76,12 @@ function App() {
           <Route path="devices" element={<AdminDevices />} />
           <Route path="users" element={<AdminUsers />} />
         </Route>
+=======
+              <AdminDashboard />
+            </PrivateRoute>
+          }
+        />
+>>>>>>> a90f4ec487a7456d1438595f75520a34fda69c41
       </Routes>
     </BrowserRouter>
   );

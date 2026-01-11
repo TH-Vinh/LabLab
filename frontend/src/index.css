@@ -74,5 +74,9 @@ button:focus-visible {
     z-index: 100000 !important;
     background-color: white !important;
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+<<<<<<< HEAD
 }
 >>>>>>> origin/main
+=======
+}
+>>>>>>> a90f4ec487a7456d1438595f75520a34fda69c41
