@@ -17,7 +17,6 @@ public class GlobalExceptionHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-    // 1. Lỗi Validate Form (@Valid) -> Trả về 400 Bad Request
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, String>> handleValidationExceptions(
             MethodArgumentNotValidException ex) {
@@ -32,7 +31,6 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
     }
 
-    // 2. Lỗi Nghiệp vụ (BusinessException) -> Trả về 400 Bad Request
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<Map<String, String>> handleBusinessException(BusinessException ex) {
         Map<String, String> errorResponse = new HashMap<>();
@@ -40,14 +38,12 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
-    // 3. Lỗi Hệ thống không mong muốn (NullPointer, Database connect fail...) -> Trả về 500 Internal Server Error
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, String>> handleGeneralException(Exception ex) {
         // Ghi log chi tiết ở server
         logger.error("Lỗi hệ thống nghiêm trọng: ", ex);
 
         Map<String, String> errorResponse = new HashMap<>();
-        // Chỉ thông báo chung chung cho user, không lộ chi tiết lỗi
         errorResponse.put("error", "Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau hoặc liên hệ quản trị viên.");
 
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);

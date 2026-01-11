@@ -11,10 +11,10 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")
-@RequiredArgsConstructor // <--- Constructor Injection
+@RequiredArgsConstructor
 public class UserController {
 
-    private final UserService userService; // <--- private final
+    private final UserService userService;
 
     @GetMapping("/profile")
     public ResponseEntity<UserProfileResponse> getCurrentProfile() {

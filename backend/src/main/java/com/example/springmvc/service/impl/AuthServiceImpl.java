@@ -15,10 +15,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 @Service
-@RequiredArgsConstructor // <--- 2. Tự động tạo Constructor cho các field final
+@RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
-    // 3. Chuyển tất cả @Autowired thành private final
     private final AuthenticationManager authenticationManager;
     private final JwtUtils jwtUtils;
 
@@ -39,10 +38,8 @@ public class AuthServiceImpl implements AuthService {
                         .map(GrantedAuthority::getAuthority)
                         .orElse("");
 
-                // 4. Dùng RoleConst thay vì chuỗi cứng
                 if (RoleConst.ADMIN.equals(role) || RoleConst.TEACHER.equals(role)) {
 
-                    // Lưu ý: Code này giả định bạn đã sửa JwtUtils theo hướng dẫn trước (nhận role)
                     String token = jwtUtils.generateToken(request.getUsername(), role);
 
                     response.setSuccess(true);

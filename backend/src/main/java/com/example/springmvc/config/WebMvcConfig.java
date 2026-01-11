@@ -15,14 +15,12 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 @EnableWebMvc
 @ComponentScan(basePackages = "com.example.springmvc")
-@PropertySource("classpath:app.properties") // Đảm bảo đã load file này
+@PropertySource("classpath:app.properties")
 public class WebMvcConfig implements WebMvcConfigurer {
 
     @Value("${file.upload-dir}")
     private String uploadDir;
 
-    // --- PHẦN SỬA ĐỔI CHÍNH TẠI ĐÂY ---
-    // Inject danh sách domain từ file properties
     @Value("${app.cors.allowed-origins}")
     private String allowedOrigins;
 
@@ -38,11 +36,10 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        // Tách chuỗi thành mảng các domain
         String[] origins = allowedOrigins.split(",");
 
-        registry.addMapping("/**") // Áp dụng cho tất cả API
-                .allowedOrigins(origins) // Cho phép các domain trong list
+        registry.addMapping("/**")
+                .allowedOrigins(origins)
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true)
