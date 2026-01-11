@@ -1,20 +1,28 @@
 package com.example.springmvc.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.validation.Validator;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-import java.nio.file.Paths;
 
 @Configuration
 @EnableWebMvc
 @ComponentScan(basePackages = "com.example.springmvc")
+@PropertySource("classpath:app.properties")
 public class WebMvcConfig implements WebMvcConfigurer {
+
+    @Value("${file.upload-dir}")
+    private String uploadDir;
+
+    @Value("${app.cors.allowed-origins}")
+    private String allowedOrigins;
 
     @Bean
     public LocalValidatorFactoryBean validator() {
@@ -28,21 +36,23 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
+        String[] origins = allowedOrigins.split(",");
+
         registry.addMapping("/**")
-                .allowedOrigins("http://localhost:5173")
+                .allowedOrigins(origins)
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true)
                 .maxAge(3600);
+
+        System.out.println("✅ CORS Configured for: " + allowedOrigins);
     }
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        String uploadPath = Paths.get("uploads").toFile().getAbsolutePath();
-
+        // Code xử lý ảnh giữ nguyên như cũ
+        String path = uploadDir.endsWith("/") ? uploadDir : uploadDir + "/";
         registry.addResourceHandler("/avatars/**")
-                .addResourceLocations("file:/" + uploadPath + "/avatars/");
-
-        System.out.println("✅ Đã mở quyền xem ảnh tại: " + uploadPath + "/avatars/");
+                .addResourceLocations("file:///" + path + "avatars/");
     }
 }
