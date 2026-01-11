@@ -1,215 +1,132 @@
 package com.example.springmvc.service.impl;
 
-import com.example.springmvc.dto.ChangePasswordRequest;
-import com.example.springmvc.dto.UpdateProfileRequest;
-import com.example.springmvc.dto.UserProfileResponse;
-import com.example.springmvc.dto.UserResponseDTO;
-import com.example.springmvc.entity.OtpType;
-import com.example.springmvc.entity.Profile;
-import com.example.springmvc.entity.User;
-import com.example.springmvc.repository.RentTicketRepository;
+import com.example.springmvc.dto.*;
+import com.example.springmvc.entity.*;
+import com.example.springmvc.exception.BusinessException;
+import com.example.springmvc.mapper.UserMapper;
 import com.example.springmvc.repository.UserRepository;
+import com.example.springmvc.repository.UserSecuritySettingsRepository;
 import com.example.springmvc.service.OtpService;
 import com.example.springmvc.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import java.io.IOException;
+import java.nio.file.*;
+import java.util.Base64;
+import java.util.UUID;
 
 @Service
-@Transactional
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final UserSecuritySettingsRepository securityRepository;
+    private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
+    private final OtpService otpService;
 
-    @Autowired
-    private RentTicketRepository rentTicketRepository;
+    @Value("${file.upload-dir}")
+    private String uploadDirConfig;
 
-    @Autowired
-    private OtpService otpService;
+    private User getAuthenticatedUser() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        User user = userRepository.findByUsernameWithProfile(auth.getName());
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @Override
-    public List<UserResponseDTO> getAllUsers() {
-        return userRepository.findAll().stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public UserResponseDTO getUserById(Integer userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        return convertToDTO(user);
-    }
-
-    @Override
-    public UserResponseDTO updateUserStatus(Integer userId, Boolean isActive) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        user.setIsActive(isActive);
-        user = userRepository.save(user);
-        return convertToDTO(user);
-    }
-
-    @Override
-    public void deleteUser(Integer userId, String currentUsername) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        
-        // Không cho phép xóa chính mình
-        if (currentUsername != null && user.getUsername().equals(currentUsername)) {
-            throw new RuntimeException("Bạn không thể xóa chính tài khoản của mình!");
+        if (user == null) throw new BusinessException("Không tìm thấy người dùng!");
+        if (user.getProfile() == null) {
+            Profile p = new Profile();
+            p.setUser(user);
+            user.setProfile(p);
         }
-        
-        // Không cho phép xóa tài khoản admin khác
-        if ("ROLE_ADMIN".equals(user.getRole())) {
-            throw new RuntimeException("Không thể xóa tài khoản Admin! Chỉ có thể vô hiệu hóa.");
-        }
-        
-        // Kiểm tra xem user có rent tickets không
-        long ticketCount = rentTicketRepository.findByUser_UserId(userId).size();
-        if (ticketCount > 0) {
-            throw new RuntimeException("Không thể xóa người dùng này vì đang có " + ticketCount + " phiếu mượn. Vui lòng vô hiệu hóa tài khoản thay vì xóa.");
-        }
-        
-        // Xóa user (Profile sẽ được xóa tự động do cascade)
-        userRepository.deleteById(userId);
-    }
-
-    private UserResponseDTO convertToDTO(User user) {
-        UserResponseDTO dto = new UserResponseDTO();
-        dto.setUserId(user.getUserId());
-        dto.setUsername(user.getUsername());
-        dto.setRole(user.getRole());
-        dto.setIsActive(user.getIsActive());
-        dto.setCreatedAt(user.getCreatedAt());
-        
-        if (user.getProfile() != null) {
-            dto.setFullName(user.getProfile().getFullName());
-            dto.setEmail(user.getProfile().getEmail());
-            dto.setPhoneNumber(user.getProfile().getPhoneNumber());
-            dto.setFaculty(user.getProfile().getFaculty());
-            dto.setDepartment(user.getProfile().getDepartment());
-        }
-        
-        return dto;
+        return user;
     }
 
     @Override
     public UserProfileResponse getCurrentUser() {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepository.findByUsernameWithProfile(username);
-        if (user == null) {
-            throw new RuntimeException("Không tìm thấy người dùng!");
-        }
-        return convertToProfileResponse(user);
+        return userMapper.toProfileDto(getAuthenticatedUser());
     }
 
     @Override
     @Transactional
     public UserProfileResponse updateProfile(UpdateProfileRequest request) {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepository.findByUsernameWithProfile(username);
-        if (user == null) {
-            throw new RuntimeException("Không tìm thấy người dùng!");
-        }
-
+        User user = getAuthenticatedUser();
         Profile profile = user.getProfile();
-        if (profile == null) {
-            profile = new Profile();
-            profile.setUser(user);
-            user.setProfile(profile);
-        }
 
-        if (StringUtils.hasText(request.getFullName())) {
-            profile.setFullName(request.getFullName());
-        }
-        if (StringUtils.hasText(request.getPhoneNumber())) {
-            profile.setPhoneNumber(request.getPhoneNumber());
-        }
-        if (StringUtils.hasText(request.getEmail())) {
-            profile.setEmail(request.getEmail());
-        }
-        if (StringUtils.hasText(request.getAvatar())) {
-            profile.setAvatar(request.getAvatar());
-        }
+        if (StringUtils.hasText(request.getFullName())) profile.setFullName(request.getFullName().trim());
+        if (StringUtils.hasText(request.getPhoneNumber())) profile.setPhoneNumber(request.getPhoneNumber().trim());
+        if (StringUtils.hasText(request.getAvatar())) updateAvatar(profile, request.getAvatar());
 
-        user = userRepository.save(user);
-        return convertToProfileResponse(user);
+        userRepository.save(user);
+        return userMapper.toProfileDto(user);
     }
 
     @Override
     @Transactional
     public void sendOtp() {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepository.findByUsernameWithProfile(username);
-        if (user == null) {
-            throw new RuntimeException("Không tìm thấy người dùng!");
+        User user = getAuthenticatedUser();
+        UserSecuritySettings settings = securityRepository.findByUser_UserId(user.getUserId())
+                .orElse(null);
+
+        if (settings == null || !Boolean.TRUE.equals(settings.getIsTwoFaEnabled())) {
+            throw new BusinessException("Tài khoản chưa bật bảo mật 2 lớp, không cần gửi mã OTP!");
         }
-        if (user.getProfile() == null || !StringUtils.hasText(user.getProfile().getEmail())) {
-            throw new RuntimeException("Bạn chưa có email trong hồ sơ. Vui lòng cập nhật email trước!");
-        }
-        otpService.generateAndSendOtp(user, OtpType.CHANGE_PASSWORD);
+
+        otpService.generateAndSendOtp(user, settings.getSecurityEmail(), OtpType.CHANGE_PASSWORD);
     }
 
     @Override
     @Transactional
     public void changePassword(ChangePasswordRequest request) {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepository.findByUsername(username);
-        if (user == null) {
-            throw new RuntimeException("Không tìm thấy người dùng!");
-        }
+        User user = getAuthenticatedUser();
 
-        // Kiểm tra mật khẩu cũ
         if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
-            throw new RuntimeException("Mật khẩu cũ không chính xác!");
+            throw new BusinessException("Mật khẩu cũ không chính xác!");
         }
 
-        // Kiểm tra mật khẩu mới và xác nhận
-        if (!StringUtils.hasText(request.getNewPassword()) || request.getNewPassword().length() < 6) {
-            throw new RuntimeException("Mật khẩu mới phải có tối thiểu 6 ký tự!");
-        }
         if (!request.getNewPassword().equals(request.getConfirmPassword())) {
-            throw new RuntimeException("Mật khẩu mới và xác nhận không khớp!");
+            throw new BusinessException("Mật khẩu xác nhận không khớp!");
         }
 
-        // Nếu có OTP code, xác thực OTP
-        if (StringUtils.hasText(request.getOtpCode())) {
-            user = userRepository.findByUsernameWithProfile(username); // Load lại với profile
-            otpService.verifyOtp(user, request.getOtpCode(), OtpType.CHANGE_PASSWORD);
+        UserSecuritySettings settings = securityRepository.findByUser_UserId(user.getUserId())
+                .orElse(null);
+
+        boolean is2FaEnabled = settings != null && Boolean.TRUE.equals(settings.getIsTwoFaEnabled());
+
+        if (is2FaEnabled) {
+            if (!StringUtils.hasText(request.getOtpCode())) {
+                throw new BusinessException("Tài khoản đang bật bảo mật 2 lớp. Vui lòng nhập mã OTP!");
+            }
+
+            otpService.verifyOtp(user, request.getOtpCode(), settings.getSecurityEmail(), OtpType.CHANGE_PASSWORD);
         }
 
-        // Cập nhật mật khẩu mới
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
     }
 
-    private UserProfileResponse convertToProfileResponse(User user) {
-        UserProfileResponse response = new UserProfileResponse();
-        response.setUserId(user.getUserId());
-        response.setUsername(user.getUsername());
-        response.setRole(user.getRole());
+    private void updateAvatar(Profile profile, String base64Data) {
+        if (!base64Data.startsWith("data:image")) return;
+        try {
+            Path rootLocation = Paths.get(uploadDirConfig).resolve("avatars");
+            if (!Files.exists(rootLocation)) Files.createDirectories(rootLocation);
 
-        if (user.getProfile() != null) {
-            response.setFullName(user.getProfile().getFullName());
-            response.setEmail(user.getProfile().getEmail());
-            response.setPhoneNumber(user.getProfile().getPhoneNumber());
-            response.setDepartment(user.getProfile().getDepartment());
-            response.setFaculty(user.getProfile().getFaculty());
-            response.setAvatar(user.getProfile().getAvatar());
+            String[] parts = base64Data.split(",");
+            String extension = parts[0].contains("jpeg") || parts[0].contains("jpg") ? ".jpg" : ".png";
+            byte[] imageBytes = Base64.getDecoder().decode(parts[1]);
+            String newFileName = UUID.randomUUID().toString() + extension;
+
+            Files.write(rootLocation.resolve(newFileName), imageBytes);
+            profile.setAvatar(newFileName);
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new BusinessException("Lỗi hệ thống khi lưu ảnh đại diện.");
         }
-
-        return response;
     }
 }
-
