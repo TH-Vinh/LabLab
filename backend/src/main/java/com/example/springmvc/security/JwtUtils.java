@@ -4,6 +4,8 @@ import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -12,6 +14,8 @@ import java.util.Date;
 
 @Component
 public class JwtUtils {
+
+    private static final Logger logger = LoggerFactory.getLogger(JwtUtils.class);
 
     @Value("${jwt.secret}")
     private String secret;
@@ -27,9 +31,10 @@ public class JwtUtils {
         this.key = Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public String generateToken(String username) {
+    public String generateToken(String username, String role) {
         return Jwts.builder()
                 .subject(username)
+                .claim("role", role)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expirationTime))
                 .signWith(key)
@@ -45,6 +50,15 @@ public class JwtUtils {
                 .getSubject();
     }
 
+    public String getRoleFromToken(String token) {
+        return Jwts.parser()
+                .verifyWith(key)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .get("role", String.class);
+    }
+
     public boolean validateToken(String token) {
         try {
             Jwts.parser()
@@ -53,13 +67,13 @@ public class JwtUtils {
                     .parseSignedClaims(token);
             return true;
         } catch (SecurityException | MalformedJwtException e) {
-            System.err.println("Chữ ký JWT không hợp lệ: " + e.getMessage());
+            logger.error("Chữ ký JWT không hợp lệ: {}", e.getMessage());
         } catch (ExpiredJwtException e) {
-            System.err.println("Token đã hết hạn: " + e.getMessage());
+            logger.error("Token đã hết hạn: {}", e.getMessage());
         } catch (UnsupportedJwtException e) {
-            System.err.println("Token không được hỗ trợ: " + e.getMessage());
+            logger.error("Token không được hỗ trợ: {}", e.getMessage());
         } catch (IllegalArgumentException e) {
-            System.err.println("Chuỗi claims rỗng: " + e.getMessage());
+            logger.error("Chuỗi claims rỗng: {}", e.getMessage());
         }
         return false;
     }
