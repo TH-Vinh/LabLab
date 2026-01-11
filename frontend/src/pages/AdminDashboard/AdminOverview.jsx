@@ -27,7 +27,7 @@ const AdminOverview = () => {
   };
 
   if (loading) {
-    return <div>Đang tải...</div>;
+    return <div className="admin-loading">Đang tải...</div>;
   }
 
   return (
@@ -39,7 +39,7 @@ const AdminOverview = () => {
           <p>Yêu cầu chờ duyệt</p>
         </div>
         <div className="stat-box">
-          <h3 style={{ color: "red" }}>{stats.lowStockChemicalsCount}</h3>
+          <h3>{stats.lowStockChemicalsCount}</h3>
           <p>Hóa chất sắp hết</p>
         </div>
         <div className="stat-box">
@@ -53,10 +53,11 @@ const AdminOverview = () => {
       </div>
 
       {/* Thông tin nhanh */}
-      <div style={{ background: "white", padding: "20px", borderRadius: "8px", marginTop: "20px" }}>
-        <h3>📋 Thông tin hệ thống</h3>
-        <p>Chào mừng đến với trang quản trị LabLab!</p>
-        <p>Sử dụng menu bên trái để điều hướng đến các chức năng quản lý.</p>
+      <div className="admin-form-container" style={{ marginTop: "24px" }}>
+        <h3>Thông tin hệ thống</h3>
+        <p style={{ margin: "8px 0", color: "#495057", lineHeight: "1.7", fontSize: "15px" }}>
+          Chào mừng đến với trang quản trị LabLab. Sử dụng menu bên trái để điều hướng đến các chức năng quản lý.
+        </p>
       </div>
     </div>
   );

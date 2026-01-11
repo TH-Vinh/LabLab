@@ -4,6 +4,9 @@ import com.example.springmvc.dto.*;
 import com.example.springmvc.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -53,11 +56,18 @@ public class AdminController {
 
     @PutMapping("/tickets/{ticketId}/status")
     public ResponseEntity<?> updateTicketStatus(
-            @PathVariable Integer ticketId,
+            @PathVariable("ticketId") Integer ticketId,
             @RequestBody UpdateRentTicketStatusDTO updateDTO
     ) {
-        rentTicketService.updateTicketStatus(ticketId, updateDTO);
-        return ResponseEntity.ok().build();
+        try {
+            rentTicketService.updateTicketStatus(ticketId, updateDTO);
+            return ResponseEntity.ok(ApiResponse.success("Cập nhật trạng thái phiếu mượn thành công!"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(ApiResponse.error("Lỗi server: " + e.getMessage()));
+        }
     }
 
     // ========== USERS ==========
@@ -72,17 +82,39 @@ public class AdminController {
     }
 
     @PutMapping("/users/{userId}/status")
-    public ResponseEntity<UserResponseDTO> updateUserStatus(
-            @PathVariable Integer userId,
-            @RequestParam Boolean isActive
+    public ResponseEntity<?> updateUserStatus(
+            @PathVariable("userId") Integer userId,
+            @RequestParam("isActive") Boolean isActive
     ) {
-        return ResponseEntity.ok(userService.updateUserStatus(userId, isActive));
+        try {
+            UserResponseDTO updatedUser = userService.updateUserStatus(userId, isActive);
+            return ResponseEntity.ok(updatedUser);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(ApiResponse.error("Lỗi server: " + e.getMessage()));
+        }
     }
 
     @DeleteMapping("/users/{userId}")
     public ResponseEntity<?> deleteUser(@PathVariable Integer userId) {
-        userService.deleteUser(userId);
-        return ResponseEntity.ok().build();
+        try {
+            // Lấy username hiện tại từ SecurityContext
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String currentUsername = null;
+            if (authentication != null && authentication.getPrincipal() instanceof UserDetails) {
+                currentUsername = ((UserDetails) authentication.getPrincipal()).getUsername();
+            }
+            
+            userService.deleteUser(userId, currentUsername);
+            return ResponseEntity.ok(ApiResponse.success("Xóa người dùng thành công!"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(ApiResponse.error("Lỗi server: " + e.getMessage()));
+        }
     }
 
     // ========== CHEMICALS ==========
@@ -107,17 +139,32 @@ public class AdminController {
     }
 
     @PutMapping("/chemicals/{id}")
-    public ResponseEntity<ChemicalResponseDTO> updateChemical(
-            @PathVariable Integer id,
+    public ResponseEntity<?> updateChemical(
+            @PathVariable("id") Integer id,
             @RequestBody ChemicalResponseDTO chemicalDTO
     ) {
-        return ResponseEntity.ok(chemicalService.updateChemical(id, chemicalDTO));
+        try {
+            ChemicalResponseDTO updated = chemicalService.updateChemical(id, chemicalDTO);
+            return ResponseEntity.ok(updated);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(ApiResponse.error("Lỗi server: " + e.getMessage()));
+        }
     }
 
     @DeleteMapping("/chemicals/{id}")
-    public ResponseEntity<?> deleteChemical(@PathVariable Integer id) {
-        chemicalService.deleteChemical(id);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<?> deleteChemical(@PathVariable("id") Integer id) {
+        try {
+            chemicalService.deleteChemical(id);
+            return ResponseEntity.ok(ApiResponse.success("Xóa hóa chất thành công!"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(ApiResponse.error("Lỗi server: " + e.getMessage()));
+        }
     }
 
     // ========== ASSETS (DEVICES) ==========
@@ -137,17 +184,32 @@ public class AdminController {
     }
 
     @PutMapping("/assets/{id}")
-    public ResponseEntity<AssetResponseDTO> updateAsset(
-            @PathVariable Integer id,
+    public ResponseEntity<?> updateAsset(
+            @PathVariable("id") Integer id,
             @RequestBody AssetResponseDTO assetDTO
     ) {
-        return ResponseEntity.ok(assetService.updateAsset(id, assetDTO));
+        try {
+            AssetResponseDTO updated = assetService.updateAsset(id, assetDTO);
+            return ResponseEntity.ok(updated);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(ApiResponse.error("Lỗi server: " + e.getMessage()));
+        }
     }
 
     @DeleteMapping("/assets/{id}")
-    public ResponseEntity<?> deleteAsset(@PathVariable Integer id) {
-        assetService.deleteAsset(id);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<?> deleteAsset(@PathVariable("id") Integer id) {
+        try {
+            assetService.deleteAsset(id);
+            return ResponseEntity.ok(ApiResponse.success("Xóa thiết bị thành công!"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(ApiResponse.error("Lỗi server: " + e.getMessage()));
+        }
     }
 }
 

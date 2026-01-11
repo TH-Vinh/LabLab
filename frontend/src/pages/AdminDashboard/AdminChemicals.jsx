@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import api from "../../services/api";
 import "./AdminDashboard.css";
 
 const AdminChemicals = () => {
   const [chemicals, setChemicals] = useState([]);
+  const [allChemicals, setAllChemicals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchKeyword, setSearchKeyword] = useState("");
   const [showForm, setShowForm] = useState(false);
@@ -19,15 +20,35 @@ const AdminChemicals = () => {
     storageLocation: "",
     originalPrice: "",
   });
+  const searchTimeoutRef = useRef(null);
 
   useEffect(() => {
     fetchChemicals();
   }, []);
 
+  useEffect(() => {
+    // Clear previous timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    // Debounce search - wait 300ms after user stops typing
+    searchTimeoutRef.current = setTimeout(() => {
+      performSearch();
+    }, 300);
+
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [searchKeyword]);
+
   const fetchChemicals = async () => {
     try {
       setLoading(true);
       const response = await api.get("/admin/chemicals");
+      setAllChemicals(response.data);
       setChemicals(response.data);
     } catch (error) {
       console.error("Error fetching chemicals:", error);
@@ -36,16 +57,23 @@ const AdminChemicals = () => {
     }
   };
 
-  const handleSearch = async () => {
-    try {
-      setLoading(true);
-      const response = await api.get(`/admin/chemicals?keyword=${searchKeyword}`);
-      setChemicals(response.data);
-    } catch (error) {
-      console.error("Error searching chemicals:", error);
-    } finally {
-      setLoading(false);
+  const performSearch = () => {
+    if (!searchKeyword.trim()) {
+      setChemicals(allChemicals);
+      return;
     }
+
+    const keyword = searchKeyword.toLowerCase().trim();
+    const filtered = allChemicals.filter((chemical) => {
+      return (
+        chemical.name?.toLowerCase().includes(keyword) ||
+        chemical.itemCode?.toLowerCase().includes(keyword) ||
+        chemical.formula?.toLowerCase().includes(keyword) ||
+        chemical.supplier?.toLowerCase().includes(keyword) ||
+        chemical.storageLocation?.toLowerCase().includes(keyword)
+      );
+    });
+    setChemicals(filtered);
   };
 
   const handleCreate = () => {
@@ -100,7 +128,24 @@ const AdminChemicals = () => {
       fetchChemicals();
     } catch (error) {
       console.error("Error saving chemical:", error);
-      alert("Có lỗi xảy ra!");
+      let errorMessage = "Có lỗi xảy ra khi lưu hóa chất!";
+      
+      if (error.response) {
+        if (error.response.data) {
+          if (error.response.data.error) {
+            errorMessage = error.response.data.error;
+          } else if (error.response.data.message) {
+            errorMessage = error.response.data.message;
+          } else if (typeof error.response.data === 'string') {
+            errorMessage = error.response.data;
+          }
+        }
+        errorMessage += `\nStatus: ${error.response.status}`;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      alert(errorMessage);
     }
   };
 
@@ -112,156 +157,122 @@ const AdminChemicals = () => {
       fetchChemicals();
     } catch (error) {
       console.error("Error deleting chemical:", error);
-      alert("Có lỗi xảy ra!");
+      let errorMessage = "Có lỗi xảy ra khi xóa hóa chất!";
+      
+      if (error.response) {
+        if (error.response.data) {
+          if (error.response.data.error) {
+            errorMessage = error.response.data.error;
+          } else if (error.response.data.message) {
+            errorMessage = error.response.data.message;
+          } else if (typeof error.response.data === 'string') {
+            errorMessage = error.response.data;
+          }
+        }
+        errorMessage += `\nStatus: ${error.response.status}`;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      alert(errorMessage);
     }
   };
 
   if (loading) {
-    return <div>Đang tải...</div>;
+    return <div className="admin-loading">Đang tải...</div>;
   }
 
   return (
     <div>
-      <div style={{ marginBottom: "20px", display: "flex", gap: "10px", alignItems: "center" }}>
+      <div className="admin-search-bar" style={{ marginBottom: "24px" }}>
         <input
           type="text"
-          placeholder="Tìm kiếm hóa chất..."
+          className="admin-search-input"
+          placeholder="Tìm kiếm hóa chất (tên, mã, công thức, nhà cung cấp)..."
           value={searchKeyword}
           onChange={(e) => setSearchKeyword(e.target.value)}
-          style={{ padding: "8px", flex: 1, borderRadius: "4px", border: "1px solid #ddd" }}
         />
-        <button
-          onClick={handleSearch}
-          style={{
-            padding: "8px 16px",
-            background: "#60a5fa",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            cursor: "pointer",
-          }}
-        >
-          Tìm kiếm
-        </button>
-        <button
-          onClick={handleCreate}
-          style={{
-            padding: "8px 16px",
-            background: "#10b981",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            cursor: "pointer",
-          }}
-        >
-          + Thêm hóa chất
+        <button className="admin-button admin-button-primary" onClick={handleCreate}>
+          Thêm hóa chất
         </button>
       </div>
 
       {showForm && (
-        <div
-          style={{
-            background: "white",
-            padding: "20px",
-            borderRadius: "8px",
-            marginBottom: "20px",
-          }}
-        >
+        <div className="admin-form-container">
           <h3>{editingChemical ? "Sửa hóa chất" : "Thêm hóa chất mới"}</h3>
           <form onSubmit={handleSubmit}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "10px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
               <input
                 type="text"
+                className="admin-input"
                 placeholder="Mã hóa chất"
                 value={formData.itemCode}
                 onChange={(e) => setFormData({ ...formData, itemCode: e.target.value })}
                 required
-                style={{ padding: "8px", borderRadius: "4px", border: "1px solid #ddd" }}
               />
               <input
                 type="text"
+                className="admin-input"
                 placeholder="Tên hóa chất"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 required
-                style={{ padding: "8px", borderRadius: "4px", border: "1px solid #ddd" }}
               />
               <input
                 type="text"
+                className="admin-input"
                 placeholder="Công thức"
                 value={formData.formula}
                 onChange={(e) => setFormData({ ...formData, formula: e.target.value })}
-                style={{ padding: "8px", borderRadius: "4px", border: "1px solid #ddd" }}
               />
               <input
                 type="text"
+                className="admin-input"
                 placeholder="Đơn vị"
                 value={formData.unit}
                 onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-                style={{ padding: "8px", borderRadius: "4px", border: "1px solid #ddd" }}
               />
               <input
                 type="number"
+                className="admin-input"
                 placeholder="Số lượng hiện tại"
                 value={formData.currentQuantity}
                 onChange={(e) => setFormData({ ...formData, currentQuantity: e.target.value })}
-                style={{ padding: "8px", borderRadius: "4px", border: "1px solid #ddd" }}
               />
               <input
                 type="text"
+                className="admin-input"
                 placeholder="Nhà cung cấp"
                 value={formData.supplier}
                 onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
-                style={{ padding: "8px", borderRadius: "4px", border: "1px solid #ddd" }}
               />
               <input
                 type="text"
+                className="admin-input"
                 placeholder="Bao bì"
                 value={formData.packaging}
                 onChange={(e) => setFormData({ ...formData, packaging: e.target.value })}
-                style={{ padding: "8px", borderRadius: "4px", border: "1px solid #ddd" }}
               />
               <input
                 type="text"
+                className="admin-input"
                 placeholder="Vị trí lưu trữ"
                 value={formData.storageLocation}
                 onChange={(e) => setFormData({ ...formData, storageLocation: e.target.value })}
-                style={{ padding: "8px", borderRadius: "4px", border: "1px solid #ddd" }}
               />
               <input
                 type="number"
+                className="admin-input"
                 placeholder="Giá gốc"
                 value={formData.originalPrice}
                 onChange={(e) => setFormData({ ...formData, originalPrice: e.target.value })}
-                style={{ padding: "8px", borderRadius: "4px", border: "1px solid #ddd" }}
               />
             </div>
-            <div style={{ display: "flex", gap: "10px" }}>
-              <button
-                type="submit"
-                style={{
-                  padding: "8px 16px",
-                  background: "#10b981",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "4px",
-                  cursor: "pointer",
-                }}
-              >
+            <div style={{ display: "flex", gap: "12px" }}>
+              <button type="submit" className="admin-button admin-button-primary">
                 {editingChemical ? "Cập nhật" : "Tạo mới"}
               </button>
-              <button
-                type="button"
-                onClick={() => setShowForm(false)}
-                style={{
-                  padding: "8px 16px",
-                  background: "#64748b",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "4px",
-                  cursor: "pointer",
-                }}
-              >
+              <button type="button" className="admin-button" onClick={() => setShowForm(false)}>
                 Hủy
               </button>
             </div>
@@ -269,35 +280,31 @@ const AdminChemicals = () => {
         </div>
       )}
 
-      <div style={{ background: "white", padding: "20px", borderRadius: "8px" }}>
-        <h3>🧪 Danh sách hóa chất</h3>
+      <div className="admin-table-container">
+        <div className="admin-section-header">
+          <h3>Danh sách hóa chất</h3>
+        </div>
         {chemicals.length === 0 ? (
-          <p>Không có hóa chất nào.</p>
+          <div className="admin-empty">
+            <p>Không có hóa chất nào.</p>
+          </div>
         ) : (
-          <table
-            style={{
-              width: "100%",
-              borderCollapse: "collapse",
-              marginTop: "15px",
-            }}
-          >
-            <thead style={{ background: "#f1f5f9" }}>
+          <table className="admin-table">
+            <thead>
               <tr>
-                <th style={{ padding: "10px", textAlign: "left" }}>Mã</th>
-                <th style={{ padding: "10px", textAlign: "left" }}>Tên</th>
-                <th style={{ padding: "10px", textAlign: "left" }}>Công thức</th>
-                <th style={{ padding: "10px", textAlign: "left" }}>Số lượng</th>
-                <th style={{ padding: "10px", textAlign: "left" }}>Đơn vị</th>
-                <th style={{ padding: "10px", textAlign: "left" }}>Vị trí</th>
-                <th style={{ padding: "10px", textAlign: "left" }}>Hành động</th>
+                <th>Mã</th>
+                <th>Tên</th>
+                <th>Công thức</th>
+                <th>Số lượng</th>
+                <th>Đơn vị</th>
+                <th>Vị trí</th>
+                <th>Hành động</th>
               </tr>
             </thead>
             <tbody>
               {chemicals.map((chemical) => (
                 <tr key={chemical.itemId}>
-                  <td style={{ padding: "10px", borderBottom: "1px solid #eee" }}>
-                    {chemical.itemCode}
-                  </td>
+                  <td>{chemical.itemCode}</td>
                   <td>{chemical.name}</td>
                   <td>{chemical.formula || "N/A"}</td>
                   <td>{chemical.currentQuantity || 0}</td>
@@ -305,29 +312,15 @@ const AdminChemicals = () => {
                   <td>{chemical.storageLocation || "N/A"}</td>
                   <td>
                     <button
+                      className="admin-button"
                       onClick={() => handleEdit(chemical)}
-                      style={{
-                        padding: "4px 8px",
-                        background: "#60a5fa",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "4px",
-                        cursor: "pointer",
-                        marginRight: "5px",
-                      }}
+                      style={{ marginRight: "8px" }}
                     >
                       Sửa
                     </button>
                     <button
+                      className="admin-button admin-button-danger"
                       onClick={() => handleDelete(chemical.itemId)}
-                      style={{
-                        padding: "4px 8px",
-                        background: "#ef4444",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "4px",
-                        cursor: "pointer",
-                      }}
                     >
                       Xóa
                     </button>

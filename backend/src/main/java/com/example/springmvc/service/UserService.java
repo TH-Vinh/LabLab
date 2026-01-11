@@ -8,6 +8,6 @@ public interface UserService {
     List<UserResponseDTO> getAllUsers();
     UserResponseDTO getUserById(Integer userId);
     UserResponseDTO updateUserStatus(Integer userId, Boolean isActive);
-    void deleteUser(Integer userId);
+    void deleteUser(Integer userId, String currentUsername);
 }
 

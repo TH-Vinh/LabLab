@@ -17,11 +17,11 @@ const AdminLayout = () => {
   };
 
   const menuItems = [
-    { path: "/admin/overview", label: "📊 Tổng quan hệ thống", component: AdminOverview },
-    { path: "/admin/tickets", label: "✅ Duyệt phiếu mượn", component: AdminRentTickets },
-    { path: "/admin/chemicals", label: "🧪 Quản lý Hóa chất", component: AdminChemicals },
-    { path: "/admin/devices", label: "🔬 Quản lý Thiết bị", component: AdminDevices },
-    { path: "/admin/users", label: "👥 Quản lý Người dùng", component: AdminUsers },
+    { path: "/admin/overview", label: "Tổng quan hệ thống", component: AdminOverview },
+    { path: "/admin/tickets", label: "Duyệt phiếu mượn", component: AdminRentTickets },
+    { path: "/admin/chemicals", label: "Quản lý Hóa chất", component: AdminChemicals },
+    { path: "/admin/devices", label: "Quản lý Thiết bị", component: AdminDevices },
+    { path: "/admin/users", label: "Quản lý Người dùng", component: AdminUsers },
   ];
 
   const isActive = (path) => {
@@ -32,7 +32,7 @@ const AdminLayout = () => {
     <div className="admin-container">
       {/* Sidebar */}
       <aside className="admin-sidebar">
-        <div className="admin-brand">🛡️ LabLab ADMIN</div>
+        <div className="admin-brand">LabLab Admin</div>
         {menuItems.map((item) => (
           <div
             key={item.path}

@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import api from "../../services/api";
 import "./AdminDashboard.css";
 
 const AdminDevices = () => {
   const [assets, setAssets] = useState([]);
+  const [allAssets, setAllAssets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchKeyword, setSearchKeyword] = useState("");
   const [showForm, setShowForm] = useState(false);
@@ -21,15 +22,35 @@ const AdminDevices = () => {
     inventoryQuantity: "",
     residualValue: "",
   });
+  const searchTimeoutRef = useRef(null);
 
   useEffect(() => {
     fetchAssets();
   }, []);
 
+  useEffect(() => {
+    // Clear previous timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    // Debounce search - wait 300ms after user stops typing
+    searchTimeoutRef.current = setTimeout(() => {
+      performSearch();
+    }, 300);
+
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [searchKeyword]);
+
   const fetchAssets = async () => {
     try {
       setLoading(true);
       const response = await api.get("/admin/assets");
+      setAllAssets(response.data);
       setAssets(response.data);
     } catch (error) {
       console.error("Error fetching assets:", error);
@@ -38,16 +59,23 @@ const AdminDevices = () => {
     }
   };
 
-  const handleSearch = async () => {
-    try {
-      setLoading(true);
-      const response = await api.get(`/admin/assets?keyword=${searchKeyword}`);
-      setAssets(response.data);
-    } catch (error) {
-      console.error("Error searching assets:", error);
-    } finally {
-      setLoading(false);
+  const performSearch = () => {
+    if (!searchKeyword.trim()) {
+      setAssets(allAssets);
+      return;
     }
+
+    const keyword = searchKeyword.toLowerCase().trim();
+    const filtered = allAssets.filter((asset) => {
+      return (
+        asset.name?.toLowerCase().includes(keyword) ||
+        asset.itemCode?.toLowerCase().includes(keyword) ||
+        asset.statusDetail?.toLowerCase().includes(keyword) ||
+        asset.supplier?.toLowerCase().includes(keyword) ||
+        asset.storageLocation?.toLowerCase().includes(keyword)
+      );
+    });
+    setAssets(filtered);
   };
 
   const handleCreate = () => {
@@ -109,7 +137,24 @@ const AdminDevices = () => {
       fetchAssets();
     } catch (error) {
       console.error("Error saving asset:", error);
-      alert("Có lỗi xảy ra!");
+      let errorMessage = "Có lỗi xảy ra khi lưu thiết bị!";
+      
+      if (error.response) {
+        if (error.response.data) {
+          if (error.response.data.error) {
+            errorMessage = error.response.data.error;
+          } else if (error.response.data.message) {
+            errorMessage = error.response.data.message;
+          } else if (typeof error.response.data === 'string') {
+            errorMessage = error.response.data;
+          }
+        }
+        errorMessage += `\nStatus: ${error.response.status}`;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      alert(errorMessage);
     }
   };
 
@@ -121,170 +166,136 @@ const AdminDevices = () => {
       fetchAssets();
     } catch (error) {
       console.error("Error deleting asset:", error);
-      alert("Có lỗi xảy ra!");
+      let errorMessage = "Có lỗi xảy ra khi xóa thiết bị!";
+      
+      if (error.response) {
+        if (error.response.data) {
+          if (error.response.data.error) {
+            errorMessage = error.response.data.error;
+          } else if (error.response.data.message) {
+            errorMessage = error.response.data.message;
+          } else if (typeof error.response.data === 'string') {
+            errorMessage = error.response.data;
+          }
+        }
+        errorMessage += `\nStatus: ${error.response.status}`;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      alert(errorMessage);
     }
   };
 
   if (loading) {
-    return <div>Đang tải...</div>;
+    return <div className="admin-loading">Đang tải...</div>;
   }
 
   return (
     <div>
-      <div style={{ marginBottom: "20px", display: "flex", gap: "10px", alignItems: "center" }}>
+      <div className="admin-search-bar" style={{ marginBottom: "24px" }}>
         <input
           type="text"
-          placeholder="Tìm kiếm thiết bị..."
+          className="admin-search-input"
+          placeholder="Tìm kiếm thiết bị (tên, mã, trạng thái, nhà cung cấp)..."
           value={searchKeyword}
           onChange={(e) => setSearchKeyword(e.target.value)}
-          style={{ padding: "8px", flex: 1, borderRadius: "4px", border: "1px solid #ddd" }}
         />
-        <button
-          onClick={handleSearch}
-          style={{
-            padding: "8px 16px",
-            background: "#60a5fa",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            cursor: "pointer",
-          }}
-        >
-          Tìm kiếm
-        </button>
-        <button
-          onClick={handleCreate}
-          style={{
-            padding: "8px 16px",
-            background: "#10b981",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            cursor: "pointer",
-          }}
-        >
-          + Thêm thiết bị
+        <button className="admin-button admin-button-primary" onClick={handleCreate}>
+          Thêm thiết bị
         </button>
       </div>
 
       {showForm && (
-        <div
-          style={{
-            background: "white",
-            padding: "20px",
-            borderRadius: "8px",
-            marginBottom: "20px",
-          }}
-        >
+        <div className="admin-form-container">
           <h3>{editingAsset ? "Sửa thiết bị" : "Thêm thiết bị mới"}</h3>
           <form onSubmit={handleSubmit}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "10px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
               <input
                 type="text"
+                className="admin-input"
                 placeholder="Mã thiết bị"
                 value={formData.itemCode}
                 onChange={(e) => setFormData({ ...formData, itemCode: e.target.value })}
                 required
-                style={{ padding: "8px", borderRadius: "4px", border: "1px solid #ddd" }}
               />
               <input
                 type="text"
+                className="admin-input"
                 placeholder="Tên thiết bị"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 required
-                style={{ padding: "8px", borderRadius: "4px", border: "1px solid #ddd" }}
               />
               <input
                 type="text"
+                className="admin-input"
                 placeholder="Đơn vị"
                 value={formData.unit}
                 onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-                style={{ padding: "8px", borderRadius: "4px", border: "1px solid #ddd" }}
               />
               <input
                 type="number"
+                className="admin-input"
                 placeholder="Năm sử dụng"
                 value={formData.yearInUse}
                 onChange={(e) => setFormData({ ...formData, yearInUse: e.target.value })}
-                style={{ padding: "8px", borderRadius: "4px", border: "1px solid #ddd" }}
               />
               <input
                 type="text"
+                className="admin-input"
                 placeholder="Trạng thái"
                 value={formData.statusDetail}
                 onChange={(e) => setFormData({ ...formData, statusDetail: e.target.value })}
-                style={{ padding: "8px", borderRadius: "4px", border: "1px solid #ddd" }}
               />
               <input
                 type="text"
+                className="admin-input"
                 placeholder="Nhà cung cấp"
                 value={formData.supplier}
                 onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
-                style={{ padding: "8px", borderRadius: "4px", border: "1px solid #ddd" }}
               />
               <input
                 type="text"
+                className="admin-input"
                 placeholder="Vị trí lưu trữ"
                 value={formData.storageLocation}
                 onChange={(e) => setFormData({ ...formData, storageLocation: e.target.value })}
-                style={{ padding: "8px", borderRadius: "4px", border: "1px solid #ddd" }}
               />
               <input
                 type="number"
+                className="admin-input"
                 placeholder="Giá gốc"
                 value={formData.originalPrice}
                 onChange={(e) => setFormData({ ...formData, originalPrice: e.target.value })}
-                style={{ padding: "8px", borderRadius: "4px", border: "1px solid #ddd" }}
               />
               <input
                 type="number"
+                className="admin-input"
                 placeholder="Số lượng kế toán"
                 value={formData.accountingQuantity}
                 onChange={(e) => setFormData({ ...formData, accountingQuantity: e.target.value })}
-                style={{ padding: "8px", borderRadius: "4px", border: "1px solid #ddd" }}
               />
               <input
                 type="number"
+                className="admin-input"
                 placeholder="Số lượng tồn kho"
                 value={formData.inventoryQuantity}
                 onChange={(e) => setFormData({ ...formData, inventoryQuantity: e.target.value })}
-                style={{ padding: "8px", borderRadius: "4px", border: "1px solid #ddd" }}
               />
               <input
                 type="number"
+                className="admin-input"
                 placeholder="Giá trị còn lại"
                 value={formData.residualValue}
                 onChange={(e) => setFormData({ ...formData, residualValue: e.target.value })}
-                style={{ padding: "8px", borderRadius: "4px", border: "1px solid #ddd" }}
               />
             </div>
-            <div style={{ display: "flex", gap: "10px" }}>
-              <button
-                type="submit"
-                style={{
-                  padding: "8px 16px",
-                  background: "#10b981",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "4px",
-                  cursor: "pointer",
-                }}
-              >
+            <div style={{ display: "flex", gap: "12px" }}>
+              <button type="submit" className="admin-button admin-button-primary">
                 {editingAsset ? "Cập nhật" : "Tạo mới"}
               </button>
-              <button
-                type="button"
-                onClick={() => setShowForm(false)}
-                style={{
-                  padding: "8px 16px",
-                  background: "#64748b",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "4px",
-                  cursor: "pointer",
-                }}
-              >
+              <button type="button" className="admin-button" onClick={() => setShowForm(false)}>
                 Hủy
               </button>
             </div>
@@ -292,34 +303,30 @@ const AdminDevices = () => {
         </div>
       )}
 
-      <div style={{ background: "white", padding: "20px", borderRadius: "8px" }}>
-        <h3>🔬 Danh sách thiết bị</h3>
+      <div className="admin-table-container">
+        <div className="admin-section-header">
+          <h3>Danh sách thiết bị</h3>
+        </div>
         {assets.length === 0 ? (
-          <p>Không có thiết bị nào.</p>
+          <div className="admin-empty">
+            <p>Không có thiết bị nào.</p>
+          </div>
         ) : (
-          <table
-            style={{
-              width: "100%",
-              borderCollapse: "collapse",
-              marginTop: "15px",
-            }}
-          >
-            <thead style={{ background: "#f1f5f9" }}>
+          <table className="admin-table">
+            <thead>
               <tr>
-                <th style={{ padding: "10px", textAlign: "left" }}>Mã</th>
-                <th style={{ padding: "10px", textAlign: "left" }}>Tên</th>
-                <th style={{ padding: "10px", textAlign: "left" }}>Trạng thái</th>
-                <th style={{ padding: "10px", textAlign: "left" }}>Số lượng</th>
-                <th style={{ padding: "10px", textAlign: "left" }}>Vị trí</th>
-                <th style={{ padding: "10px", textAlign: "left" }}>Hành động</th>
+                <th>Mã</th>
+                <th>Tên</th>
+                <th>Trạng thái</th>
+                <th>Số lượng</th>
+                <th>Vị trí</th>
+                <th>Hành động</th>
               </tr>
             </thead>
             <tbody>
               {assets.map((asset) => (
                 <tr key={asset.itemId}>
-                  <td style={{ padding: "10px", borderBottom: "1px solid #eee" }}>
-                    {asset.itemCode}
-                  </td>
+                  <td>{asset.itemCode}</td>
                   <td>{asset.name}</td>
                   <td>{asset.statusDetail || "N/A"}</td>
                   <td>
@@ -328,29 +335,15 @@ const AdminDevices = () => {
                   <td>{asset.storageLocation || "N/A"}</td>
                   <td>
                     <button
+                      className="admin-button"
                       onClick={() => handleEdit(asset)}
-                      style={{
-                        padding: "4px 8px",
-                        background: "#60a5fa",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "4px",
-                        cursor: "pointer",
-                        marginRight: "5px",
-                      }}
+                      style={{ marginRight: "8px" }}
                     >
                       Sửa
                     </button>
                     <button
+                      className="admin-button admin-button-danger"
                       onClick={() => handleDelete(asset.itemId)}
-                      style={{
-                        padding: "4px 8px",
-                        background: "#ef4444",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "4px",
-                        cursor: "pointer",
-                      }}
                     >
                       Xóa
                     </button>

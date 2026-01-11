@@ -2,6 +2,7 @@ package com.example.springmvc.service.impl;
 
 import com.example.springmvc.dto.UserResponseDTO;
 import com.example.springmvc.entity.User;
+import com.example.springmvc.repository.RentTicketRepository;
 import com.example.springmvc.repository.UserRepository;
 import com.example.springmvc.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private RentTicketRepository rentTicketRepository;
 
     @Override
     public List<UserResponseDTO> getAllUsers() {
@@ -42,10 +46,27 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void deleteUser(Integer userId) {
-        if (!userRepository.existsById(userId)) {
-            throw new RuntimeException("User not found");
+    public void deleteUser(Integer userId, String currentUsername) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        // Không cho phép xóa chính mình
+        if (currentUsername != null && user.getUsername().equals(currentUsername)) {
+            throw new RuntimeException("Bạn không thể xóa chính tài khoản của mình!");
         }
+        
+        // Không cho phép xóa tài khoản admin khác
+        if ("ROLE_ADMIN".equals(user.getRole())) {
+            throw new RuntimeException("Không thể xóa tài khoản Admin! Chỉ có thể vô hiệu hóa.");
+        }
+        
+        // Kiểm tra xem user có rent tickets không
+        long ticketCount = rentTicketRepository.findByUser_UserId(userId).size();
+        if (ticketCount > 0) {
+            throw new RuntimeException("Không thể xóa người dùng này vì đang có " + ticketCount + " phiếu mượn. Vui lòng vô hiệu hóa tài khoản thay vì xóa.");
+        }
+        
+        // Xóa user (Profile sẽ được xóa tự động do cascade)
         userRepository.deleteById(userId);
     }
 
