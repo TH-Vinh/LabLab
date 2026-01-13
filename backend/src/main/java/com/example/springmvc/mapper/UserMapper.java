@@ -1,6 +1,6 @@
 package com.example.springmvc.mapper;
 
-import com.example.springmvc.dto.UserProfileResponse;
+import com.example.springmvc.dto.user.UserProfileResponse;
 import com.example.springmvc.entity.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

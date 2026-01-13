@@ -1,8 +1,8 @@
 package com.example.springmvc.service.impl;
 
-import com.example.springmvc.dto.Enable2FaRequest;
-import com.example.springmvc.dto.SecuritySettingsResponse;
-import com.example.springmvc.dto.VerifyOtpRequest;
+import com.example.springmvc.dto.auth.Enable2FaRequest;
+import com.example.springmvc.dto.user.SecuritySettingsResponse;
+import com.example.springmvc.dto.auth.VerifyOtpRequest;
 import com.example.springmvc.entity.OtpType;
 import com.example.springmvc.entity.User;
 import com.example.springmvc.entity.UserSecuritySettings;

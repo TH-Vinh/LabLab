@@ -1,5 +1,6 @@
 package com.example.springmvc.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.ToString;
@@ -16,6 +17,7 @@ public class Profile {
     @OneToOne
     @JoinColumn(name = "user_id", referencedColumnName = "user_id")
     @ToString.Exclude
+    @JsonIgnore
     private User user;
 
     @Column(name = "full_name")

@@ -1,12 +1,12 @@
 package com.example.springmvc.service.impl;
 
 import com.example.springmvc.constant.RoleConst;
-import com.example.springmvc.dto.LoginRequest;
-import com.example.springmvc.dto.LoginResponse;
+import com.example.springmvc.dto.auth.LoginRequest;
+import com.example.springmvc.dto.auth.LoginResponse;
 import com.example.springmvc.exception.BusinessException;
 import com.example.springmvc.security.JwtUtils;
 import com.example.springmvc.service.AuthService;
-import lombok.RequiredArgsConstructor; // <--- 1. Import Lombok
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;

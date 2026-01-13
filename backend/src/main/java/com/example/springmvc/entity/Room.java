@@ -12,18 +12,14 @@ public class Room {
     @Column(name = "room_id")
     private Integer roomId;
 
-    @Column(name = "room_name", nullable = false, unique = true)
-    private String roomName; // VD: 101, 304...
+    @Column(name = "room_name", nullable = false)
+    private String roomName;
 
-    @Column(name = "floor")
     private Integer floor;
-
-    @Column(name = "capacity")
     private Integer capacity;
 
-    @Column(name = "type")
-    private String type; // LAB, WAREHOUSE, CLASS...
+    @Column(nullable = false)
+    private String type; // LAB, CLASS, WAREHOUSE, OFFICE
 
-    @Column(name = "description")
     private String description;
 }

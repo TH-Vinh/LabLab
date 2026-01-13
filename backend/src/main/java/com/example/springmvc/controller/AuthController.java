@@ -1,7 +1,7 @@
 package com.example.springmvc.controller;
 
-import com.example.springmvc.dto.LoginRequest;
-import com.example.springmvc.dto.LoginResponse;
+import com.example.springmvc.dto.auth.LoginRequest;
+import com.example.springmvc.dto.auth.LoginResponse;
 import com.example.springmvc.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

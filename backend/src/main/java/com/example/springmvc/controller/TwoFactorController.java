@@ -1,6 +1,9 @@
 package com.example.springmvc.controller;
 
-import com.example.springmvc.dto.*;
+import com.example.springmvc.dto.auth.ChangeTwoFaEmailRequest;
+import com.example.springmvc.dto.auth.Enable2FaRequest;
+import com.example.springmvc.dto.auth.VerifyOtpRequest;
+import com.example.springmvc.dto.user.SecuritySettingsResponse;
 import com.example.springmvc.service.TwoFactorService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
