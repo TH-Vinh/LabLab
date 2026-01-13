@@ -1,5 +1,6 @@
 package com.example.springmvc.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.math.BigDecimal;
@@ -15,14 +16,15 @@ public class RentTicketDetail {
 
     @ManyToOne
     @JoinColumn(name = "ticket_id", nullable = false)
+    @JsonIgnore
     private RentTicket rentTicket;
 
     @ManyToOne
     @JoinColumn(name = "item_id", nullable = false)
     private Item item;
 
-    @Column(name = "quantity", nullable = false)
-    private BigDecimal quantity;
+    @Column(name = "quantity_borrowed", nullable = false)
+    private BigDecimal quantityBorrowed;
 
     @Column(name = "return_status")
     private String returnStatus;

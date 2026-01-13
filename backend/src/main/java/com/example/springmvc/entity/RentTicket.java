@@ -28,12 +28,15 @@ public class RentTicket {
     @Column(name = "created_date", updatable = false)
     private LocalDateTime createdDate;
 
+    @Column(name = "borrow_date")
+    private LocalDateTime borrowDate;
+
     @Column(name = "expected_return_date")
     private LocalDateTime expectedReturnDate;
 
     @Column(name = "status")
     private String status;
 
-    @OneToMany(mappedBy = "rentTicket", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "rentTicket", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<RentTicketDetail> details = new ArrayList<>();
 }

@@ -1,6 +1,8 @@
 package com.example.springmvc.controller;
 
-import com.example.springmvc.dto.*;
+import com.example.springmvc.dto.auth.ChangePasswordRequest;
+import com.example.springmvc.dto.user.UpdateProfileRequest;
+import com.example.springmvc.dto.user.UserProfileResponse;
 import com.example.springmvc.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -11,10 +13,10 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")
-@RequiredArgsConstructor
+@RequiredArgsConstructor // <--- Constructor Injection
 public class UserController {
 
-    private final UserService userService;
+    private final UserService userService; // <--- private final
 
     @GetMapping("/profile")
     public ResponseEntity<UserProfileResponse> getCurrentProfile() {
