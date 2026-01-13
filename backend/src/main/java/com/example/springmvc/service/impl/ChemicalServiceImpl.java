@@ -42,9 +42,23 @@ public class ChemicalServiceImpl implements ChemicalService {
 
     @Override
     public ChemicalResponseDTO createChemical(ChemicalResponseDTO chemicalDTO) {
-        Chemical chemical = convertToEntity(chemicalDTO);
-        chemical = chemicalRepository.save(chemical);
-        return convertToDTO(chemical);
+        try {
+            // Kiểm tra mã đã tồn tại chưa
+            if (chemicalDTO.getItemCode() != null) {
+                java.util.Optional<Chemical> existing = chemicalRepository.findByItemCode(chemicalDTO.getItemCode().trim());
+                if (existing.isPresent()) {
+                    throw new RuntimeException("Mã hóa chất '" + chemicalDTO.getItemCode() + "' đã tồn tại!");
+                }
+            }
+            
+            Chemical chemical = convertToEntity(chemicalDTO);
+            chemical = chemicalRepository.save(chemical);
+            return convertToDTO(chemical);
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            throw new RuntimeException("Lỗi khi lưu hóa chất: Mã hóa chất có thể đã tồn tại hoặc dữ liệu không hợp lệ. " + e.getMessage());
+        } catch (Exception e) {
+            throw new RuntimeException("Lỗi khi tạo hóa chất: " + e.getMessage(), e);
+        }
     }
 
     @Override
@@ -79,6 +93,57 @@ public class ChemicalServiceImpl implements ChemicalService {
         chemicalRepository.deleteById(id);
     }
 
+    @Override
+    public ChemicalResponseDTO importOrUpdateChemical(ChemicalResponseDTO chemicalDTO) {
+        if (chemicalDTO == null) {
+            throw new RuntimeException("ChemicalDTO không được null!");
+        }
+        
+        if (chemicalDTO.getItemCode() == null || chemicalDTO.getItemCode().trim().isEmpty()) {
+            throw new RuntimeException("Mã hóa chất không được để trống!");
+        }
+        
+        // Tìm hóa chất theo mã
+        java.util.Optional<Chemical> existingChemicalOpt = chemicalRepository.findByItemCode(chemicalDTO.getItemCode().trim());
+        
+        if (existingChemicalOpt.isPresent()) {
+            // Nếu đã tồn tại: cập nhật số lượng (cộng thêm)
+            Chemical existing = existingChemicalOpt.get();
+            java.math.BigDecimal newQuantity = existing.getCurrentQuantity() != null ? existing.getCurrentQuantity() : java.math.BigDecimal.ZERO;
+            java.math.BigDecimal importQuantity = chemicalDTO.getCurrentQuantity() != null ? chemicalDTO.getCurrentQuantity() : java.math.BigDecimal.ZERO;
+            existing.setCurrentQuantity(newQuantity.add(importQuantity));
+            
+            // Cập nhật các thông tin khác nếu có
+            if (chemicalDTO.getName() != null && !chemicalDTO.getName().isEmpty()) {
+                existing.setName(chemicalDTO.getName());
+            }
+            if (chemicalDTO.getUnit() != null) {
+                existing.setUnit(chemicalDTO.getUnit());
+            }
+            if (chemicalDTO.getFormula() != null) {
+                existing.setFormula(chemicalDTO.getFormula());
+            }
+            if (chemicalDTO.getSupplier() != null) {
+                existing.setSupplier(chemicalDTO.getSupplier());
+            }
+            if (chemicalDTO.getPackaging() != null) {
+                existing.setPackaging(chemicalDTO.getPackaging());
+            }
+            if (chemicalDTO.getStorageLocation() != null) {
+                existing.setStorageLocation(chemicalDTO.getStorageLocation());
+            }
+            if (chemicalDTO.getOriginalPrice() != null) {
+                existing.setOriginalPrice(chemicalDTO.getOriginalPrice());
+            }
+            
+            existing = chemicalRepository.save(existing);
+            return convertToDTO(existing);
+        } else {
+            // Nếu chưa có: tạo mới
+            return createChemical(chemicalDTO);
+        }
+    }
+
     private ChemicalResponseDTO convertToDTO(Chemical chemical) {
         ChemicalResponseDTO dto = new ChemicalResponseDTO();
         dto.setItemId(chemical.getItemId());
@@ -101,19 +166,31 @@ public class ChemicalServiceImpl implements ChemicalService {
     }
 
     private Chemical convertToEntity(ChemicalResponseDTO dto) {
+        if (dto == null) {
+            throw new RuntimeException("ChemicalDTO không được null!");
+        }
+        
+        if (dto.getItemCode() == null || dto.getItemCode().trim().isEmpty()) {
+            throw new RuntimeException("Mã hóa chất không được để trống!");
+        }
+        
+        if (dto.getName() == null || dto.getName().trim().isEmpty()) {
+            throw new RuntimeException("Tên hóa chất không được để trống!");
+        }
+        
         Chemical chemical = new Chemical();
-        chemical.setItemCode(dto.getItemCode());
-        chemical.setName(dto.getName());
+        chemical.setItemCode(dto.getItemCode().trim());
+        chemical.setName(dto.getName().trim());
         chemical.setCategoryType("CHEMICAL");
-        chemical.setUnit(dto.getUnit());
-        chemical.setCurrentQuantity(dto.getCurrentQuantity());
+        chemical.setUnit(dto.getUnit() != null ? dto.getUnit().trim() : null);
+        chemical.setCurrentQuantity(dto.getCurrentQuantity() != null ? dto.getCurrentQuantity() : java.math.BigDecimal.ZERO);
         chemical.setLockedQuantity(dto.getLockedQuantity() != null ? dto.getLockedQuantity() : java.math.BigDecimal.ZERO);
         chemical.setYearInUse(dto.getYearInUse());
         
-        chemical.setFormula(dto.getFormula());
-        chemical.setSupplier(dto.getSupplier());
-        chemical.setPackaging(dto.getPackaging());
-        chemical.setStorageLocation(dto.getStorageLocation());
+        chemical.setFormula(dto.getFormula() != null ? dto.getFormula().trim() : null);
+        chemical.setSupplier(dto.getSupplier() != null ? dto.getSupplier().trim() : null);
+        chemical.setPackaging(dto.getPackaging() != null ? dto.getPackaging().trim() : null);
+        chemical.setStorageLocation(dto.getStorageLocation() != null ? dto.getStorageLocation().trim() : null);
         chemical.setOriginalPrice(dto.getOriginalPrice());
         
         return chemical;

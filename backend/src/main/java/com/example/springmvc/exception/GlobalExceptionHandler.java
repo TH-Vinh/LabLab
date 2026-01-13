@@ -38,13 +38,35 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<Map<String, String>> handleRuntimeException(RuntimeException ex) {
+        // Ghi log chi tiết ở server
+        logger.error("Lỗi runtime: ", ex);
+        
+        Map<String, String> errorResponse = new HashMap<>();
+        String errorMessage = ex.getMessage();
+        if (errorMessage == null || errorMessage.isEmpty()) {
+            errorMessage = "Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau hoặc liên hệ quản trị viên.";
+        }
+        errorResponse.put("error", errorMessage);
+        
+        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, String>> handleGeneralException(Exception ex) {
         // Ghi log chi tiết ở server
         logger.error("Lỗi hệ thống nghiêm trọng: ", ex);
-
+        
         Map<String, String> errorResponse = new HashMap<>();
-        errorResponse.put("error", "Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau hoặc liên hệ quản trị viên.");
+        String errorMessage = ex.getMessage();
+        if (errorMessage == null || errorMessage.isEmpty()) {
+            errorMessage = "Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau hoặc liên hệ quản trị viên.";
+        } else {
+            // Trả về thông báo lỗi chi tiết nếu có
+            errorMessage = "Lỗi: " + errorMessage;
+        }
+        errorResponse.put("error", errorMessage);
 
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }

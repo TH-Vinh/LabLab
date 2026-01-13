@@ -22,5 +22,9 @@ public interface AssetRepository extends JpaRepository<Asset, Integer> {
     // Tìm thiết bị theo trạng thái
     @Query("SELECT a FROM Asset a WHERE a.statusDetail = :status")
     List<Asset> findByStatus(@Param("status") String status);
+    
+    // Tìm thiết bị theo mã
+    @Query("SELECT a FROM Asset a WHERE a.itemCode = :itemCode")
+    java.util.Optional<Asset> findByItemCode(@Param("itemCode") String itemCode);
 }
 

@@ -11,5 +11,10 @@ public interface ChemicalService {
     ChemicalResponseDTO createChemical(ChemicalResponseDTO chemicalDTO);
     ChemicalResponseDTO updateChemical(Integer id, ChemicalResponseDTO chemicalDTO);
     void deleteChemical(Integer id);
+    
+    /**
+     * Import hóa chất: nếu mã đã tồn tại thì cập nhật số lượng (cộng thêm), nếu chưa có thì tạo mới
+     */
+    ChemicalResponseDTO importOrUpdateChemical(ChemicalResponseDTO chemicalDTO);
 }
 

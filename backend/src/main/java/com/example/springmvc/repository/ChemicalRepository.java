@@ -22,5 +22,9 @@ public interface ChemicalRepository extends JpaRepository<Chemical, Integer> {
     // Tìm kiếm hóa chất theo tên hoặc công thức
     @Query("SELECT c FROM Chemical c WHERE c.name LIKE CONCAT('%', :keyword, '%') OR c.formula LIKE CONCAT('%', :keyword, '%')")
     List<Chemical> searchChemicals(@Param("keyword") String keyword);
+    
+    // Tìm hóa chất theo mã
+    @Query("SELECT c FROM Chemical c WHERE c.itemCode = :itemCode")
+    java.util.Optional<Chemical> findByItemCode(@Param("itemCode") String itemCode);
 }
 

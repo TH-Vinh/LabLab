@@ -4,6 +4,7 @@ import com.example.springmvc.dto.ChangePasswordRequest;
 import com.example.springmvc.dto.UpdateProfileRequest;
 import com.example.springmvc.dto.UserProfileResponse;
 import com.example.springmvc.dto.UserResponseDTO;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -19,6 +20,7 @@ public interface UserService {
     
     // Password and OTP
     void sendOtp();
+
     void changePassword(ChangePasswordRequest request);
 }
 

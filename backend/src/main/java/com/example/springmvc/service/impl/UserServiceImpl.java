@@ -20,6 +20,7 @@ import org.springframework.util.StringUtils;
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.Base64;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -46,6 +47,26 @@ public class UserServiceImpl implements UserService {
             user.setProfile(p);
         }
         return user;
+    }
+
+    @Override
+    public List<UserResponseDTO> getAllUsers() {
+        return List.of();
+    }
+
+    @Override
+    public UserResponseDTO getUserById(Integer userId) {
+        return null;
+    }
+
+    @Override
+    public UserResponseDTO updateUserStatus(Integer userId, Boolean isActive) {
+        return null;
+    }
+
+    @Override
+    public void deleteUser(Integer userId, String currentUsername) {
+
     }
 
     @Override
@@ -118,7 +139,7 @@ public class UserServiceImpl implements UserService {
             if (!Files.exists(rootLocation)) Files.createDirectories(rootLocation);
 
             String[] parts = base64Data.split(",");
-            String extension = parts[0].contains("jpeg") || parts[0].contains("jpg") ? ".jpg" : ".png";
+            String extension = parts[0].contains("jpeg") ||   parts[0].contains("jpg") ? ".jpg" : ".png";
             byte[] imageBytes = Base64.getDecoder().decode(parts[1]);
             String newFileName = UUID.randomUUID().toString() + extension;
 

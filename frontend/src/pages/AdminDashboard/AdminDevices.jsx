@@ -191,6 +191,58 @@ const AdminDevices = () => {
     return <div className="admin-loading">Đang tải...</div>;
   }
 
+  const handleExport = async () => {
+    try {
+      const response = await api.get("/admin/assets/export", {
+        responseType: "blob",
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "thiet-bi.xlsx");
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      alert("Xuất file Excel thành công!");
+    } catch (error) {
+      console.error("Error exporting:", error);
+      alert("Có lỗi xảy ra khi xuất file!");
+    }
+  };
+
+  const handleImport = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.name.endsWith(".xlsx") && !file.name.endsWith(".xls")) {
+      alert("Vui lòng chọn file Excel (.xlsx hoặc .xls)!");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      // Không set Content-Type, để axios tự động set với boundary
+      const response = await api.post("/admin/assets/import", formData, {
+        timeout: 60000, // 60 seconds timeout
+      });
+      alert(response.data.message || "Import thành công!");
+      fetchAssets();
+      e.target.value = ""; // Reset file input
+    } catch (error) {
+      console.error("Error importing:", error);
+      let errorMessage = "Có lỗi xảy ra khi import file!";
+      if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+      alert(errorMessage);
+      e.target.value = ""; // Reset file input
+    }
+  };
+
   return (
     <div>
       <div className="admin-search-bar" style={{ marginBottom: "24px" }}>
@@ -201,9 +253,23 @@ const AdminDevices = () => {
           value={searchKeyword}
           onChange={(e) => setSearchKeyword(e.target.value)}
         />
-        <button className="admin-button admin-button-primary" onClick={handleCreate}>
-          Thêm thiết bị
-        </button>
+        <div style={{ display: "flex", gap: "8px" }}>
+          <button className="admin-button" onClick={handleExport}>
+            Xuất Excel
+          </button>
+          <label className="admin-button" style={{ cursor: "pointer" }}>
+            Nhập Excel
+            <input
+              type="file"
+              accept=".xlsx,.xls"
+              onChange={handleImport}
+              style={{ display: "none" }}
+            />
+          </label>
+          <button className="admin-button admin-button-primary" onClick={handleCreate}>
+            Thêm thiết bị
+          </button>
+        </div>
       </div>
 
       {showForm && (

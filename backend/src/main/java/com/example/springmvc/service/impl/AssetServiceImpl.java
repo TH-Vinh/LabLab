@@ -72,6 +72,59 @@ public class AssetServiceImpl implements AssetService {
         assetRepository.deleteById(id);
     }
 
+    @Override
+    public AssetResponseDTO importOrUpdateAsset(AssetResponseDTO assetDTO) {
+        // Tìm thiết bị theo mã
+        java.util.Optional<Asset> existingAssetOpt = assetRepository.findByItemCode(assetDTO.getItemCode());
+        
+        if (existingAssetOpt.isPresent()) {
+            // Nếu đã tồn tại: cập nhật số lượng (cộng thêm)
+            Asset existing = existingAssetOpt.get();
+            
+            // Cập nhật số lượng kế toán và tồn kho (cộng thêm)
+            if (assetDTO.getAccountingQuantity() != null) {
+                int currentAccounting = existing.getAccountingQuantity() != null ? existing.getAccountingQuantity() : 0;
+                existing.setAccountingQuantity(currentAccounting + assetDTO.getAccountingQuantity());
+            }
+            if (assetDTO.getInventoryQuantity() != null) {
+                int currentInventory = existing.getInventoryQuantity() != null ? existing.getInventoryQuantity() : 0;
+                existing.setInventoryQuantity(currentInventory + assetDTO.getInventoryQuantity());
+            }
+            
+            // Cập nhật các thông tin khác nếu có
+            if (assetDTO.getName() != null && !assetDTO.getName().isEmpty()) {
+                existing.setName(assetDTO.getName());
+            }
+            if (assetDTO.getUnit() != null) {
+                existing.setUnit(assetDTO.getUnit());
+            }
+            if (assetDTO.getYearInUse() != null) {
+                existing.setYearInUse(assetDTO.getYearInUse());
+            }
+            if (assetDTO.getStatusDetail() != null) {
+                existing.setStatusDetail(assetDTO.getStatusDetail());
+            }
+            if (assetDTO.getSupplier() != null) {
+                existing.setSupplier(assetDTO.getSupplier());
+            }
+            if (assetDTO.getStorageLocation() != null) {
+                existing.setStorageLocation(assetDTO.getStorageLocation());
+            }
+            if (assetDTO.getOriginalPrice() != null) {
+                existing.setOriginalPrice(assetDTO.getOriginalPrice());
+            }
+            if (assetDTO.getResidualValue() != null) {
+                existing.setResidualValue(assetDTO.getResidualValue());
+            }
+            
+            existing = assetRepository.save(existing);
+            return convertToDTO(existing);
+        } else {
+            // Nếu chưa có: tạo mới
+            return createAsset(assetDTO);
+        }
+    }
+
     private AssetResponseDTO convertToDTO(Asset asset) {
         AssetResponseDTO dto = new AssetResponseDTO();
         dto.setItemId(asset.getItemId());
