@@ -43,10 +43,11 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
+        // Tách chuỗi thành mảng các domain
         String[] origins = allowedOrigins.split(",");
 
-        registry.addMapping("/**")
-                .allowedOrigins(origins)
+        registry.addMapping("/**") // Áp dụng cho tất cả API
+                .allowedOrigins(origins) // Cho phép các domain trong list
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true)
@@ -57,9 +58,12 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // Code xử lý ảnh giữ nguyên như cũ
+
         String path = uploadDir.endsWith("/") ? uploadDir : uploadDir + "/";
+
         registry.addResourceHandler("/avatars/**")
                 .addResourceLocations("file:///" + path + "avatars/");
+
+        System.out.println("✅ Đã map thư mục ảnh tại: " + path + "avatars/");
     }
 }

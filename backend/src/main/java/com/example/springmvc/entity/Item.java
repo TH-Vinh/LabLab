@@ -51,4 +51,7 @@ public abstract class Item {
     @Column(name = "created_at", updatable = false)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
+
+    @Version
+    private Integer version = 0;
 }

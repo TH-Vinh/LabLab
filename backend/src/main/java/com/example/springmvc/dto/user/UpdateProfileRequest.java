@@ -1,5 +1,6 @@
-package com.example.springmvc.dto;
+package com.example.springmvc.dto.user;
 
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -17,6 +18,7 @@ public class UpdateProfileRequest {
     @Pattern(regexp = "^\\d{10}$", message = "Số điện thoại phải bao gồm đúng 10 chữ số")
     private String phoneNumber;
 
+    @Email
     private String email;
 
     private String avatar;

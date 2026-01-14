@@ -1,8 +1,8 @@
 package com.example.springmvc.service;
 
-import com.example.springmvc.dto.Enable2FaRequest;
-import com.example.springmvc.dto.SecuritySettingsResponse;
-import com.example.springmvc.dto.VerifyOtpRequest;
+import com.example.springmvc.dto.auth.Enable2FaRequest;
+import com.example.springmvc.dto.user.SecuritySettingsResponse;
+import com.example.springmvc.dto.auth.VerifyOtpRequest;
 
 public interface TwoFactorService {
     SecuritySettingsResponse getSecuritySettings();

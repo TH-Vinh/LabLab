@@ -1,15 +1,8 @@
 package com.example.springmvc.service;
 
-import com.example.springmvc.dto.ItemResponse;
-import com.example.springmvc.entity.Item;
+import com.example.springmvc.dto.item.ItemResponse;
 import java.util.List;
 
 public interface ItemService {
-    /**
-     * Tìm kiếm vật tư (Hóa chất, Thiết bị, Dụng cụ)
-     * @param category Loại (CHEMICAL, DEVICE, TOOL) hoặc "ALL"
-     * @param keyword Từ khóa tìm kiếm theo tên
-     * @return Danh sách Item
-     */
-    List<ItemResponse> searchItems(String category, String keyword);
+    List<ItemResponse> searchItems(String category, String keyword, boolean fetchStock);
 }

@@ -1,26 +1,13 @@
 package com.example.springmvc.service;
 
-import com.example.springmvc.dto.ChangePasswordRequest;
-import com.example.springmvc.dto.UpdateProfileRequest;
-import com.example.springmvc.dto.UserProfileResponse;
-import com.example.springmvc.dto.UserResponseDTO;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
+import com.example.springmvc.dto.auth.ChangePasswordRequest;
+import com.example.springmvc.dto.user.UpdateProfileRequest;
+import com.example.springmvc.dto.user.UserProfileResponse;
 
 public interface UserService {
-    List<UserResponseDTO> getAllUsers();
-    UserResponseDTO getUserById(Integer userId);
-    UserResponseDTO updateUserStatus(Integer userId, Boolean isActive);
-    void deleteUser(Integer userId, String currentUsername);
-    
-    // User profile management
     UserProfileResponse getCurrentUser();
     UserProfileResponse updateProfile(UpdateProfileRequest request);
-    
-    // Password and OTP
-    void sendOtp();
 
+    void sendOtp();
     void changePassword(ChangePasswordRequest request);
 }
-

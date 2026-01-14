@@ -1,6 +1,8 @@
 package com.example.springmvc.service.impl;
 
-import com.example.springmvc.dto.*;
+import com.example.springmvc.dto.auth.ChangePasswordRequest;
+import com.example.springmvc.dto.user.UpdateProfileRequest;
+import com.example.springmvc.dto.user.UserProfileResponse;
 import com.example.springmvc.entity.*;
 import com.example.springmvc.exception.BusinessException;
 import com.example.springmvc.mapper.UserMapper;
