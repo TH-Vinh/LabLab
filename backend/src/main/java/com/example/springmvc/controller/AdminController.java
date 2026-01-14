@@ -44,15 +44,25 @@ public class AdminController {
 
     // ========== RENT TICKETS ==========
     @GetMapping("/tickets/pending")
-    public ResponseEntity<List<RentTicketResponseDTO>> getPendingTickets() {
-        return ResponseEntity.ok(rentTicketService.getPendingTickets());
+    public ResponseEntity<?> getPendingTickets() {
+        try {
+            return ResponseEntity.ok(rentTicketService.getPendingTickets());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(ApiResponse.error("Lỗi khi tải danh sách phiếu chờ duyệt: " + e.getMessage()));
+        }
     }
 
     @GetMapping("/tickets")
-    public ResponseEntity<List<RentTicketResponseDTO>> getAllTickets(
-            @RequestParam(required = false) String status
+    public ResponseEntity<?> getAllTickets(
+            @RequestParam(value = "status", required = false) String status
     ) {
-        return ResponseEntity.ok(rentTicketService.getAllTickets(status));
+        try {
+            return ResponseEntity.ok(rentTicketService.getAllTickets(status));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(ApiResponse.error("Lỗi khi tải danh sách phiếu mượn: " + e.getMessage()));
+        }
     }
 
     @GetMapping("/tickets/{ticketId}")
@@ -78,8 +88,13 @@ public class AdminController {
 
     // ========== USERS ==========
     @GetMapping("/users")
-    public ResponseEntity<List<UserResponseDTO>> getAllUsers() {
-        return ResponseEntity.ok(userService.getAllUsers());
+    public ResponseEntity<?> getAllUsers() {
+        try {
+            return ResponseEntity.ok(userService.getAllUsers());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(ApiResponse.error("Lỗi khi tải danh sách người dùng: " + e.getMessage()));
+        }
     }
 
     @GetMapping("/users/{userId}")

@@ -18,19 +18,60 @@ const AdminRentTickets = () => {
       setTickets(response.data);
     } catch (error) {
       console.error("Error fetching tickets:", error);
+      let errorMessage = "Không thể tải danh sách phiếu mượn!";
+      
+      if (error.response) {
+        if (error.response.data) {
+          if (error.response.data.error) {
+            errorMessage = error.response.data.error;
+          } else if (error.response.data.message) {
+            errorMessage = error.response.data.message;
+          } else if (typeof error.response.data === 'string') {
+            errorMessage = error.response.data;
+          }
+        }
+        errorMessage += `\nMã lỗi: ${error.response.status}`;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      alert(errorMessage);
+      setTickets([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
   };
 
   const handleUpdateStatus = async (ticketId, status) => {
+    const action = status === "APPROVED" ? "duyệt" : "từ chối";
+    if (!window.confirm(`Bạn có chắc muốn ${action} phiếu mượn này?`)) {
+      return;
+    }
+    
     try {
       await api.put(`/admin/tickets/${ticketId}/status`, { status });
-      alert(`Đã ${status === "APPROVED" ? "duyệt" : "từ chối"} phiếu mượn thành công!`);
+      alert(`Đã ${action} phiếu mượn thành công!`);
       fetchTickets();
     } catch (error) {
       console.error("Error updating ticket status:", error);
-      alert("Có lỗi xảy ra!");
+      let errorMessage = `Không thể ${action} phiếu mượn!`;
+      
+      if (error.response) {
+        if (error.response.data) {
+          if (error.response.data.error) {
+            errorMessage = error.response.data.error;
+          } else if (error.response.data.message) {
+            errorMessage = error.response.data.message;
+          } else if (typeof error.response.data === 'string') {
+            errorMessage = error.response.data;
+          }
+        }
+        errorMessage += `\nMã lỗi: ${error.response.status}`;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      alert(errorMessage);
     }
   };
 

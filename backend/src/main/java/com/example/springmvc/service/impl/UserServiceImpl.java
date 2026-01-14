@@ -1,5 +1,6 @@
 package com.example.springmvc.service.impl;
 
+import com.example.springmvc.dto.UserResponseDTO;
 import com.example.springmvc.dto.auth.ChangePasswordRequest;
 import com.example.springmvc.dto.user.UpdateProfileRequest;
 import com.example.springmvc.dto.user.UserProfileResponse;
@@ -24,6 +25,7 @@ import java.nio.file.*;
 import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -52,23 +54,75 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<UserResponseDTO> getAllUsers() {
-        return List.of();
+        List<User> users = userRepository.findAll();
+        return users.stream()
+                .map(this::convertToUserResponseDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
+    @Transactional(readOnly = true)
     public UserResponseDTO getUserById(Integer userId) {
-        return null;
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException("Không tìm thấy người dùng với ID: " + userId));
+        return convertToUserResponseDTO(user);
     }
 
     @Override
+    @Transactional
     public UserResponseDTO updateUserStatus(Integer userId, Boolean isActive) {
-        return null;
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException("Không tìm thấy người dùng với ID: " + userId));
+        
+        user.setIsActive(isActive);
+        userRepository.save(user);
+        return convertToUserResponseDTO(user);
     }
 
     @Override
+    @Transactional
     public void deleteUser(Integer userId, String currentUsername) {
-
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException("Không tìm thấy người dùng với ID: " + userId));
+        
+        // Không cho phép xóa admin
+        if ("ROLE_ADMIN".equals(user.getRole())) {
+            throw new BusinessException("Không thể xóa tài khoản Admin!");
+        }
+        
+        // Không cho phép xóa chính mình
+        if (user.getUsername().equals(currentUsername)) {
+            throw new BusinessException("Không thể xóa chính tài khoản của bạn!");
+        }
+        
+        userRepository.delete(user);
+    }
+    
+    private UserResponseDTO convertToUserResponseDTO(User user) {
+        if (user == null) {
+            return null;
+        }
+        
+        UserResponseDTO dto = new UserResponseDTO();
+        dto.setUserId(user.getUserId());
+        dto.setUsername(user.getUsername());
+        dto.setRole(user.getRole());
+        dto.setIsActive(user.getIsActive());
+        dto.setCreatedAt(user.getCreatedAt());
+        
+        // Lấy thông tin từ profile nếu có
+        if (user.getProfile() != null) {
+            Profile profile = user.getProfile();
+            dto.setFullName(profile.getFullName());
+            dto.setEmail(profile.getEmail());
+            dto.setPhoneNumber(profile.getPhoneNumber());
+            dto.setFaculty(profile.getFaculty());
+            dto.setDepartment(profile.getDepartment());
+        }
+        
+        return dto;
     }
 
     @Override
@@ -141,7 +195,8 @@ public class UserServiceImpl implements UserService {
             if (!Files.exists(rootLocation)) Files.createDirectories(rootLocation);
 
             String[] parts = base64Data.split(",");
-            String extension = parts[0].contains("jpeg") ||   parts[0].contains("jpg") ? ".jpg" : ".png";
+            String extension = parts[0].contains("jpeg") ||
+                    parts[0].contains("jpg") ? ".jpg" : ".png";
             byte[] imageBytes = Base64.getDecoder().decode(parts[1]);
             String newFileName = UUID.randomUUID().toString() + extension;
 

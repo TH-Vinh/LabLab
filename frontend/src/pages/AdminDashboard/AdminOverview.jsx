@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Check } from "lucide-react";
 import api from "../../services/api";
 import "./AdminDashboard.css";
 
 const AdminOverview = () => {
+  const navigate = useNavigate();
   const [stats, setStats] = useState({
     pendingTicketsCount: 0,
     lowStockChemicalsCount: 0,
@@ -51,6 +54,7 @@ const AdminOverview = () => {
           <p>Người dùng hoạt động</p>
         </div>
       </div>
+
 
       {/* Thông tin nhanh */}
       <div className="admin-form-container" style={{ marginTop: "24px" }}>

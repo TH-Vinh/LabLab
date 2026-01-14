@@ -1,9 +1,13 @@
 package com.example.springmvc.config;
 
+import jakarta.servlet.Filter;
 import jakarta.servlet.MultipartConfigElement;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRegistration;
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
+import org.springframework.web.filter.DelegatingFilterProxy;
 import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatcherServletInitializer;
 
 public class WebAppInitializer extends AbstractAnnotationConfigDispatcherServletInitializer {
@@ -25,6 +29,15 @@ public class WebAppInitializer extends AbstractAnnotationConfigDispatcherServlet
     protected String[] getServletMappings() {
         return new String[]{"/"};
     }
+    
+    @Override
+    protected Filter[] getServletFilters() {
+        // Đăng ký CORS filter với priority cao nhất
+        DelegatingFilterProxy corsFilterProxy = new DelegatingFilterProxy("corsFilter");
+        corsFilterProxy.setTargetBeanName("corsFilter");
+        return new Filter[]{corsFilterProxy};
+    }
+    
     @Override
     public void onStartup(ServletContext servletContext) throws ServletException {
         super.onStartup(servletContext);

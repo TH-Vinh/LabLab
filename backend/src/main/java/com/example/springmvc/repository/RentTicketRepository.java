@@ -2,6 +2,7 @@ package com.example.springmvc.repository;
 
 import com.example.springmvc.entity.RentTicket;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
@@ -22,6 +23,9 @@ public interface RentTicketRepository extends JpaRepository<RentTicket, Integer>
 
     // Đếm số lượng phiếu đã đặt phòng trong khoảng thời gian cụ thể (Dùng để check trùng lịch)
     // Nếu kết quả > 0 nghĩa là phòng đã bị bận
+    @Query("SELECT COUNT(t) FROM RentTicket t WHERE t.room.roomId = :roomId " +
+           "AND t.status IN ('PENDING', 'APPROVED') " +
+           "AND ((t.borrowDate <= :reqEnd AND t.expectedReturnDate >= :reqStart))")
     long countActiveBookings(
             @Param("roomId") Integer roomId,
             @Param("reqStart") LocalDateTime reqStart,

@@ -38,6 +38,7 @@ const AdminLayout = () => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [quickSearchValue, setQuickSearchValue] = useState("");
+  const [pendingTicketsCount, setPendingTicketsCount] = useState(0);
   const menuRef = useRef(null);
   const searchInputRef = useRef(null);
 
@@ -68,6 +69,7 @@ const AdminLayout = () => {
     };
 
     fetchUserProfile();
+    fetchPendingTicketsCount();
 
     const handleUserUpdate = () => {
       setAvatarUrl(localStorage.getItem("user_avatar"));
@@ -77,10 +79,27 @@ const AdminLayout = () => {
 
     window.addEventListener("user_update", handleUserUpdate);
 
+    // Fetch pending tickets count mỗi 30 giây
+    const interval = setInterval(() => {
+      fetchPendingTicketsCount();
+    }, 30000);
+
     return () => {
       window.removeEventListener("user_update", handleUserUpdate);
+      clearInterval(interval);
     };
   }, []);
+
+  const fetchPendingTicketsCount = async () => {
+    try {
+      const response = await api.get("/admin/dashboard/stats");
+      if (response.data && response.data.pendingTicketsCount !== undefined) {
+        setPendingTicketsCount(response.data.pendingTicketsCount);
+      }
+    } catch (error) {
+      console.error("Error fetching pending tickets count:", error);
+    }
+  };
 
   const handleQuickSearch = (e) => {
     if (e.key === "Enter" && quickSearchValue.trim() !== "") {
@@ -214,29 +233,78 @@ const AdminLayout = () => {
               onClick={toggleNoti}
             >
               <Bell size={22} color="#333" strokeWidth={2} />
-              <span className="badge-dot"></span>
+              {pendingTicketsCount > 0 && (
+                <span 
+                  className="badge-dot"
+                  style={{
+                    position: "absolute",
+                    top: "-2px",
+                    right: "-2px",
+                    backgroundColor: "#d32f2f",
+                    color: "white",
+                    borderRadius: "10px",
+                    minWidth: "18px",
+                    height: "18px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "11px",
+                    fontWeight: "bold",
+                    padding: "0 5px",
+                    border: "2px solid white"
+                  }}
+                >
+                  {pendingTicketsCount > 99 ? "99+" : pendingTicketsCount}
+                </span>
+              )}
             </button>
             {showNotiMenu && (
               <div className="dropdown-menu">
-                <div className="dropdown-header">Thông báo mới</div>
-                <div className="dropdown-item">
-                  <div className="noti-content">
-                    <span className="noti-text">
-                      <Check size={14} color="green" /> Phiếu mượn mới cần duyệt.
-                    </span>
-                    <span className="noti-time">5 phút trước</span>
+                <div className="dropdown-header">Thông báo</div>
+                {pendingTicketsCount > 0 ? (
+                  <>
+                    <div 
+                      className="dropdown-item"
+                      onClick={() => {
+                        navigate("/admin/tickets");
+                        setShowNotiMenu(false);
+                      }}
+                      style={{ cursor: "pointer" }}
+                    >
+                      <div className="noti-content">
+                        <span className="noti-text">
+                          <Check size={14} color="green" /> 
+                          {pendingTicketsCount === 1 
+                            ? "Có 1 phiếu mượn mới cần duyệt."
+                            : `Có ${pendingTicketsCount} phiếu mượn mới cần duyệt.`}
+                        </span>
+                      </div>
+                    </div>
+                    <div
+                      className="dropdown-item"
+                      onClick={() => {
+                        navigate("/admin/tickets");
+                        setShowNotiMenu(false);
+                      }}
+                      style={{
+                        justifyContent: "center",
+                        color: "#1a73e8",
+                        fontWeight: "bold",
+                        cursor: "pointer"
+                      }}
+                    >
+                      Xem tất cả
+                    </div>
+                  </>
+                ) : (
+                  <div className="dropdown-item">
+                    <div className="noti-content">
+                      <span className="noti-text" style={{ color: "#666" }}>
+                        Không có thông báo mới
+                      </span>
+                    </div>
                   </div>
-                </div>
-                <div
-                  className="dropdown-item"
-                  style={{
-                    justifyContent: "center",
-                    color: "#1a73e8",
-                    fontWeight: "bold",
-                  }}
-                >
-                  Xem tất cả
-                </div>
+                )}
               </div>
             )}
           </div>

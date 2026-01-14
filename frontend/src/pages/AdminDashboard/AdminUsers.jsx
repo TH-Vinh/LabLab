@@ -22,7 +22,25 @@ const AdminUsers = () => {
       setUsers(response.data);
     } catch (error) {
       console.error("Error fetching users:", error);
-      alert("Không thể tải danh sách người dùng!");
+      let errorMessage = "Không thể tải danh sách người dùng!";
+      
+      if (error.response) {
+        if (error.response.data) {
+          if (error.response.data.error) {
+            errorMessage = error.response.data.error;
+          } else if (error.response.data.message) {
+            errorMessage = error.response.data.message;
+          } else if (typeof error.response.data === 'string') {
+            errorMessage = error.response.data;
+          }
+        }
+        errorMessage += `\nMã lỗi: ${error.response.status}`;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      alert(errorMessage);
+      setUsers([]); // Set empty array on error
     } finally {
       setLoading(false);
     }

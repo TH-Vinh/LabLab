@@ -31,7 +31,7 @@ public class AdminServiceImpl implements AdminService {
         
         // Đếm phiếu mượn chờ duyệt
         stats.setPendingTicketsCount(
-            rentTicketRepository.findPendingTickets().stream().count()
+            rentTicketRepository.findByStatusOrderByCreatedDateDesc("PENDING").stream().count()
         );
         
         // Đếm hóa chất sắp hết (currentQuantity < 10)

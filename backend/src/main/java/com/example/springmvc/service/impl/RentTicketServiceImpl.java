@@ -22,7 +22,7 @@ public class RentTicketServiceImpl implements RentTicketService {
 
     @Override
     public List<RentTicketResponseDTO> getPendingTickets() {
-        return rentTicketRepository.findPendingTickets().stream()
+        return rentTicketRepository.findByStatusOrderByCreatedDateDesc("PENDING").stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
@@ -31,9 +31,9 @@ public class RentTicketServiceImpl implements RentTicketService {
     public List<RentTicketResponseDTO> getAllTickets(String status) {
         List<RentTicket> tickets;
         if (status != null && !status.isEmpty()) {
-            tickets = rentTicketRepository.findByStatus(status);
+            tickets = rentTicketRepository.findByStatusOrderByCreatedDateDesc(status);
         } else {
-            tickets = rentTicketRepository.findAll();
+            tickets = rentTicketRepository.findAllByOrderByCreatedDateDesc();
         }
         
         return tickets.stream()
@@ -58,28 +58,39 @@ public class RentTicketServiceImpl implements RentTicketService {
     }
 
     private RentTicketResponseDTO convertToDTO(RentTicket ticket) {
-        RentTicketResponseDTO dto = new RentTicketResponseDTO();
-        dto.setTicketId(ticket.getTicketId());
-        dto.setUserId(ticket.getUser().getUserId());
-        dto.setUsername(ticket.getUser().getUsername());
-        
-        if (ticket.getUser().getProfile() != null) {
-            dto.setFullName(ticket.getUser().getProfile().getFullName());
+        if (ticket == null) {
+            throw new RuntimeException("Ticket is null");
         }
         
+        RentTicketResponseDTO dto = new RentTicketResponseDTO();
+        dto.setTicketId(ticket.getTicketId());
+        
+        // Handle user safely
+        if (ticket.getUser() != null) {
+            dto.setUserId(ticket.getUser().getUserId());
+            dto.setUsername(ticket.getUser().getUsername());
+            
+            if (ticket.getUser().getProfile() != null) {
+                dto.setFullName(ticket.getUser().getProfile().getFullName());
+            }
+        }
+        
+        // Handle room safely
         if (ticket.getRoom() != null) {
             dto.setRoomId(ticket.getRoom().getRoomId());
             dto.setRoomName(ticket.getRoom().getRoomName());
         }
         
         dto.setCreatedDate(ticket.getCreatedDate());
+        dto.setBorrowDate(ticket.getBorrowDate());
         dto.setExpectedReturnDate(ticket.getExpectedReturnDate());
         dto.setStatus(ticket.getStatus());
         
-        // Convert details
-        if (ticket.getDetails() != null) {
+        // Convert details safely
+        if (ticket.getDetails() != null && !ticket.getDetails().isEmpty()) {
             dto.setDetails(ticket.getDetails().stream()
                     .map(this::convertDetailToDTO)
+                    .filter(detail -> detail != null)
                     .collect(Collectors.toList()));
         }
         
@@ -87,14 +98,23 @@ public class RentTicketServiceImpl implements RentTicketService {
     }
 
     private RentTicketResponseDTO.RentTicketDetailDTO convertDetailToDTO(RentTicketDetail detail) {
+        if (detail == null) {
+            return null;
+        }
+        
         RentTicketResponseDTO.RentTicketDetailDTO dto = new RentTicketResponseDTO.RentTicketDetailDTO();
         dto.setDetailId(detail.getDetailId());
-        dto.setItemId(detail.getItem().getItemId());
-        dto.setItemName(detail.getItem().getName());
-        dto.setItemCode(detail.getItem().getItemCode());
-        dto.setCategoryType(detail.getItem().getCategoryType());
-        dto.setQuantity(detail.getQuantity());
-        dto.setUnit(detail.getItem().getUnit());
+        
+        // Handle item safely
+        if (detail.getItem() != null) {
+            dto.setItemId(detail.getItem().getItemId());
+            dto.setItemName(detail.getItem().getName());
+            dto.setItemCode(detail.getItem().getItemCode());
+            dto.setCategoryType(detail.getItem().getCategoryType());
+            dto.setUnit(detail.getItem().getUnit());
+        }
+        
+        dto.setQuantity(detail.getQuantityBorrowed());
         dto.setReturnStatus(detail.getReturnStatus());
         return dto;
     }
