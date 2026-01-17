@@ -1,19 +1,13 @@
 package com.example.springmvc.service;
 
-import com.example.springmvc.dto.AssetResponseDTO;
-
+import com.example.springmvc.dto.item.AssetResponse;
 import java.util.List;
 
 public interface AssetService {
-    List<AssetResponseDTO> getAllAssets();
-    AssetResponseDTO getAssetById(Integer id);
-    AssetResponseDTO createAsset(AssetResponseDTO assetDTO);
-    AssetResponseDTO updateAsset(Integer id, AssetResponseDTO assetDTO);
+    List<AssetResponse> getAllAssets();
+    AssetResponse getAssetById(Integer id);
+    AssetResponse createAsset(AssetResponse assetDTO);
+    AssetResponse updateAsset(Integer id, AssetResponse assetDTO);
     void deleteAsset(Integer id);
-    
-    /**
-     * Import thiết bị: nếu mã đã tồn tại thì cập nhật số lượng (cộng thêm), nếu chưa có thì tạo mới
-     */
-    AssetResponseDTO importOrUpdateAsset(AssetResponseDTO assetDTO);
+    AssetResponse importOrUpdateAsset(AssetResponse assetDTO);
 }
-

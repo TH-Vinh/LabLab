@@ -13,6 +13,7 @@ import java.util.List;
 
 @Repository
 public interface ItemRepository extends JpaRepository<Item, Integer> {
+
     List<Item> findByCategoryType(String categoryType);
 
     @Query("SELECT i FROM Item i WHERE i.name LIKE CONCAT('%', :keyword, '%')")
@@ -23,8 +24,9 @@ public interface ItemRepository extends JpaRepository<Item, Integer> {
 
     @Modifying
     @Transactional
-    @Query("UPDATE Item i SET i.currentQuantity = i.currentQuantity - :quantity, " +
-           "i.lockedQuantity = COALESCE(i.lockedQuantity, 0) + :quantity " +
-           "WHERE i.itemId = :itemId AND i.currentQuantity >= :quantity")
+    @Query("UPDATE Item i SET " +
+            "i.currentQuantity = i.currentQuantity - :quantity, " +
+            "i.lockedQuantity = COALESCE(i.lockedQuantity, 0) + :quantity " +
+            "WHERE i.itemId = :itemId AND i.currentQuantity >= :quantity")
     int reserveStock(@Param("itemId") Integer itemId, @Param("quantity") BigDecimal quantity);
 }

@@ -2,7 +2,7 @@ package com.example.springmvc.service.impl;
 
 import com.example.springmvc.dto.room.RoomResponse;
 import com.example.springmvc.entity.Room;
-import com.example.springmvc.mapper.RoomMapper; // Import Mapper
+import com.example.springmvc.mapper.RoomMapper;
 import com.example.springmvc.repository.RoomRepository;
 import com.example.springmvc.service.RoomService;
 import lombok.RequiredArgsConstructor;

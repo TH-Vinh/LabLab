@@ -1,20 +1,14 @@
 package com.example.springmvc.service;
 
-import com.example.springmvc.dto.ChemicalResponseDTO;
-
+import com.example.springmvc.dto.item.ChemicalResponse;
 import java.util.List;
 
 public interface ChemicalService {
-    List<ChemicalResponseDTO> getAllChemicals();
-    List<ChemicalResponseDTO> getLowStockChemicals();
-    ChemicalResponseDTO getChemicalById(Integer id);
-    ChemicalResponseDTO createChemical(ChemicalResponseDTO chemicalDTO);
-    ChemicalResponseDTO updateChemical(Integer id, ChemicalResponseDTO chemicalDTO);
+    List<ChemicalResponse> getAllChemicals();
+    List<ChemicalResponse> getLowStockChemicals();
+    ChemicalResponse getChemicalById(Integer id);
+    ChemicalResponse createChemical(ChemicalResponse chemicalDTO);
+    ChemicalResponse updateChemical(Integer id, ChemicalResponse chemicalDTO);
     void deleteChemical(Integer id);
-    
-    /**
-     * Import hóa chất: nếu mã đã tồn tại thì cập nhật số lượng (cộng thêm), nếu chưa có thì tạo mới
-     */
-    ChemicalResponseDTO importOrUpdateChemical(ChemicalResponseDTO chemicalDTO);
+    ChemicalResponse importOrUpdateChemical(ChemicalResponse chemicalDTO);
 }
-

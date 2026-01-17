@@ -11,11 +11,8 @@ public class ItemResponse {
     private String name;
     private String categoryType;
     private String unit;
-
     private BigDecimal availableQuantity;
-
     private Integer yearInUse;
-
     private String formula;
     private String packaging;
     private String supplier;

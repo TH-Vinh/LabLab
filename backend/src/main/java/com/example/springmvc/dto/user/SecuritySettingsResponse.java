@@ -1,4 +1,5 @@
 package com.example.springmvc.dto.user;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 

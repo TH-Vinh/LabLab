@@ -5,7 +5,7 @@ import "./AdminDashboard.css";
 const AdminRentTickets = () => {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState("PENDING"); // PENDING, APPROVED, REJECTED
+  const [filter, setFilter] = useState("PENDING");
 
   useEffect(() => {
     fetchTickets();
@@ -14,73 +14,59 @@ const AdminRentTickets = () => {
   const fetchTickets = async () => {
     try {
       setLoading(true);
-      const response = await api.get(`/admin/tickets${filter ? `?status=${filter}` : ""}`);
+      const response = await api.get(
+        `/admin/tickets${filter ? `?status=${filter}` : ""}`,
+      );
       setTickets(response.data);
     } catch (error) {
       console.error("Error fetching tickets:", error);
       let errorMessage = "Không thể tải danh sách phiếu mượn!";
-      
-      if (error.response) {
-        if (error.response.data) {
-          if (error.response.data.error) {
-            errorMessage = error.response.data.error;
-          } else if (error.response.data.message) {
-            errorMessage = error.response.data.message;
-          } else if (typeof error.response.data === 'string') {
-            errorMessage = error.response.data;
-          }
-        }
-        errorMessage += `\nMã lỗi: ${error.response.status}`;
-      } else if (error.message) {
-        errorMessage = error.message;
+      if (error.response && error.response.data) {
+        errorMessage =
+          error.response.data.message ||
+          error.response.data.error ||
+          errorMessage;
       }
-      
       alert(errorMessage);
-      setTickets([]); // Set empty array on error
+      setTickets([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleUpdateStatus = async (ticketId, status) => {
-    const action = status === "APPROVED" ? "duyệt" : "từ chối";
-    if (!window.confirm(`Bạn có chắc muốn ${action} phiếu mượn này?`)) {
+  const handleUpdateStatus = async (ticketId, newStatus) => {
+    const actionText = newStatus === "APPROVED" ? "duyệt" : "từ chối";
+    if (!window.confirm(`Bạn có chắc muốn ${actionText} phiếu mượn này?`)) {
       return;
     }
-    
+
     try {
-      await api.put(`/admin/tickets/${ticketId}/status`, { status });
-      alert(`Đã ${action} phiếu mượn thành công!`);
+      await api.post(`/rent/review/${ticketId}/${newStatus}`);
+      alert(
+        newStatus === "APPROVED"
+          ? "Đã duyệt phiếu thành công!"
+          : "Đã từ chối phiếu!",
+      );
       fetchTickets();
     } catch (error) {
       console.error("Error updating ticket status:", error);
-      let errorMessage = `Không thể ${action} phiếu mượn!`;
-      
-      if (error.response) {
-        if (error.response.data) {
-          if (error.response.data.error) {
-            errorMessage = error.response.data.error;
-          } else if (error.response.data.message) {
-            errorMessage = error.response.data.message;
-          } else if (typeof error.response.data === 'string') {
-            errorMessage = error.response.data;
-          }
-        }
-        errorMessage += `\nMã lỗi: ${error.response.status}`;
-      } else if (error.message) {
-        errorMessage = error.message;
+      let errorMessage = `Không thể ${actionText} phiếu mượn!`;
+      if (error.response && error.response.data) {
+        errorMessage =
+          error.response.data.message ||
+          error.response.data.error ||
+          errorMessage;
       }
-      
       alert(errorMessage);
     }
   };
 
   if (loading) {
-    return <div className="admin-loading">Đang tải...</div>;
+    return <div className="admin-loading">Đang tải dữ liệu...</div>;
   }
 
   return (
-    <div>
+    <div className="admin-tickets-container">
       <div className="admin-search-bar">
         <button
           className={`admin-button ${filter === "PENDING" ? "admin-button-primary" : ""}`}
@@ -114,15 +100,15 @@ const AdminRentTickets = () => {
         </div>
         {tickets.length === 0 ? (
           <div className="admin-empty">
-            <p>Không có phiếu mượn nào.</p>
+            <p>Không tìm thấy phiếu mượn nào.</p>
           </div>
         ) : (
           <table className="admin-table">
             <thead>
               <tr>
                 <th>Người mượn</th>
-                <th>Phòng</th>
-                <th>Vật tư</th>
+                <th>Phòng Lab</th>
+                <th>Vật tư mượn</th>
                 <th>Ngày tạo</th>
                 <th>Trạng thái</th>
                 <th>Hành động</th>
@@ -131,18 +117,18 @@ const AdminRentTickets = () => {
             <tbody>
               {tickets.map((ticket) => (
                 <tr key={ticket.ticketId}>
-                  <td>{ticket.fullName || ticket.username}</td>
+                  <td style={{ fontWeight: "600" }}>
+                    {ticket.borrowerName || "N/A"}
+                  </td>
                   <td>{ticket.roomName || "N/A"}</td>
                   <td>
-                    {ticket.details?.map((detail) => (
-                      <div key={detail.detailId} style={{ marginBottom: "4px" }}>
-                        {detail.itemName} ({detail.quantity} {detail.unit})
-                      </div>
-                    ))}
+                    <div className="item-summary-text">
+                      {ticket.itemSummary || "Không có chi tiết"}
+                    </div>
                   </td>
                   <td>
                     {ticket.createdDate
-                      ? new Date(ticket.createdDate).toLocaleDateString("vi-VN")
+                      ? new Date(ticket.createdDate).toLocaleString("vi-VN")
                       : "N/A"}
                   </td>
                   <td>
@@ -151,33 +137,41 @@ const AdminRentTickets = () => {
                         ticket.status === "APPROVED"
                           ? "admin-badge-success"
                           : ticket.status === "REJECTED"
-                          ? "admin-badge-error"
-                          : "admin-badge-warning"
+                            ? "admin-badge-error"
+                            : "admin-badge-warning"
                       }`}
                     >
                       {ticket.status === "APPROVED"
                         ? "Đã duyệt"
                         : ticket.status === "REJECTED"
-                        ? "Đã từ chối"
-                        : "Chờ duyệt"}
+                          ? "Đã từ chối"
+                          : "Chờ duyệt"}
                     </span>
                   </td>
                   <td>
-                    {ticket.status === "PENDING" && (
-                      <>
+                    {ticket.status === "PENDING" ? (
+                      <div className="admin-actions-cell">
                         <button
                           className="btn-approve"
-                          onClick={() => handleUpdateStatus(ticket.ticketId, "APPROVED")}
+                          onClick={() =>
+                            handleUpdateStatus(ticket.ticketId, "APPROVED")
+                          }
                         >
                           Duyệt
                         </button>
                         <button
                           className="btn-reject"
-                          onClick={() => handleUpdateStatus(ticket.ticketId, "REJECTED")}
+                          onClick={() =>
+                            handleUpdateStatus(ticket.ticketId, "REJECTED")
+                          }
                         >
                           Từ chối
                         </button>
-                      </>
+                      </div>
+                    ) : (
+                      <span style={{ color: "#888", fontSize: "0.9rem" }}>
+                        N/A
+                      </span>
                     )}
                   </td>
                 </tr>

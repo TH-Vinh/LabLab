@@ -48,4 +48,5 @@ logs/
 log/
 
 .SmartTomcat/
-uploads/
+
+/uploads/

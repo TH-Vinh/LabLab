@@ -14,7 +14,9 @@ public class Chemical extends Item {
     @Column(name = "spec_id", insertable = false, updatable = false)
     private Integer specId;
 
-    private String formula;
-    private String packaging;
+    @Column(name = "formula")
+    private String formula; // Công thức hóa học
 
+    @Column(name = "packaging")
+    private String packaging; // Quy cách đóng gói (VD: Chai 500ml, Can 5L)
 }

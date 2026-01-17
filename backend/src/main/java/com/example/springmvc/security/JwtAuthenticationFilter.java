@@ -14,6 +14,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
+
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
@@ -30,12 +31,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        // Skip JWT authentication for OPTIONS requests (CORS preflight)
-        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
         try {
             String token = getTokenFromRequest(request);
 
@@ -43,16 +38,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String username = jwtUtils.getUsernameFromToken(token);
                 String role = jwtUtils.getRoleFromToken(token);
 
-                List<SimpleGrantedAuthority> authorities = Collections.singletonList(
-                        new SimpleGrantedAuthority(role)
-                );
+                if (role != null) {
+                    List<SimpleGrantedAuthority> authorities = Collections.singletonList(
+                            new SimpleGrantedAuthority(role)
+                    );
 
-                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                        username, null, authorities);
+                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                            username, null, authorities);
 
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                }
             }
         } catch (Exception e) {
             logger.error("Không thể xác thực user: ", e);

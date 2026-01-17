@@ -6,7 +6,6 @@ import lombok.Data;
 
 @Data
 public class ChangeTwoFaEmailRequest {
-
     @NotBlank(message = "Email không được để trống")
     @Email(message = "Định dạng email không hợp lệ (ví dụ: user@example.com)")
     private String newEmail;

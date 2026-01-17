@@ -7,7 +7,6 @@ import lombok.Data;
 
 @Data
 public class ChangePasswordRequest {
-
     @NotBlank(message = "Vui lòng nhập mật khẩu cũ")
     private String oldPassword;
 

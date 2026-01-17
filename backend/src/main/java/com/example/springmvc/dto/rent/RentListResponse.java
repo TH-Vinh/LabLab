@@ -1,5 +1,6 @@
 package com.example.springmvc.dto.rent;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 import java.time.LocalDateTime;
 
@@ -11,5 +12,9 @@ public class RentListResponse {
     private LocalDateTime borrowDate;
     private LocalDateTime expectedReturnDate;
     private String status;
+
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime createdDate;
+
+    private String itemSummary;
 }

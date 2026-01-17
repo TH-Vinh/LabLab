@@ -6,25 +6,18 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ChemicalRepository extends JpaRepository<Chemical, Integer> {
-    
-    // Tìm tất cả hóa chất
+
     @Query("SELECT c FROM Chemical c")
     List<Chemical> findAllChemicals();
-    
-    // Tìm hóa chất sắp hết (currentQuantity < threshold)
-    @Query("SELECT c FROM Chemical c WHERE c.currentQuantity < :threshold")
-    List<Chemical> findLowStockChemicals(@Param("threshold") java.math.BigDecimal threshold);
-    
-    // Tìm kiếm hóa chất theo tên hoặc công thức
-    @Query("SELECT c FROM Chemical c WHERE c.name LIKE CONCAT('%', :keyword, '%') OR c.formula LIKE CONCAT('%', :keyword, '%')")
-    List<Chemical> searchChemicals(@Param("keyword") String keyword);
-    
-    // Tìm hóa chất theo mã
-    @Query("SELECT c FROM Chemical c WHERE c.itemCode = :itemCode")
-    java.util.Optional<Chemical> findByItemCode(@Param("itemCode") String itemCode);
-}
 
+    @Query("SELECT c FROM Chemical c WHERE c.currentQuantity < :threshold")
+    List<Chemical> findLowStockChemicals(@Param("threshold") BigDecimal threshold);
+
+    Optional<Chemical> findByItemCode(String itemCode);
+}

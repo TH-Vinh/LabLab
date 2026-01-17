@@ -29,16 +29,12 @@ const AdminDevices = () => {
   }, []);
 
   useEffect(() => {
-    // Clear previous timeout
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
     }
-
-    // Debounce search - wait 300ms after user stops typing
     searchTimeoutRef.current = setTimeout(() => {
       performSearch();
     }, 300);
-
     return () => {
       if (searchTimeoutRef.current) {
         clearTimeout(searchTimeoutRef.current);
@@ -64,7 +60,6 @@ const AdminDevices = () => {
       setAssets(allAssets);
       return;
     }
-
     const keyword = searchKeyword.toLowerCase().trim();
     const filtered = allAssets.filter((asset) => {
       return (
@@ -137,23 +132,13 @@ const AdminDevices = () => {
       fetchAssets();
     } catch (error) {
       console.error("Error saving asset:", error);
-      let errorMessage = "Có lỗi xảy ra khi lưu thiết bị!";
-      
-      if (error.response) {
-        if (error.response.data) {
-          if (error.response.data.error) {
-            errorMessage = error.response.data.error;
-          } else if (error.response.data.message) {
-            errorMessage = error.response.data.message;
-          } else if (typeof error.response.data === 'string') {
-            errorMessage = error.response.data;
-          }
-        }
-        errorMessage += `\nStatus: ${error.response.status}`;
-      } else if (error.message) {
-        errorMessage = error.message;
+      let errorMessage = "Có lỗi xảy ra!";
+      if (error.response?.data) {
+        errorMessage =
+          error.response.data.message ||
+          error.response.data.error ||
+          errorMessage;
       }
-      
       alert(errorMessage);
     }
   };
@@ -166,43 +151,26 @@ const AdminDevices = () => {
       fetchAssets();
     } catch (error) {
       console.error("Error deleting asset:", error);
-      let errorMessage = "Có lỗi xảy ra khi xóa thiết bị!";
-      
-      if (error.response) {
-        if (error.response.data) {
-          if (error.response.data.error) {
-            errorMessage = error.response.data.error;
-          } else if (error.response.data.message) {
-            errorMessage = error.response.data.message;
-          } else if (typeof error.response.data === 'string') {
-            errorMessage = error.response.data;
-          }
-        }
-        errorMessage += `\nStatus: ${error.response.status}`;
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      
-      alert(errorMessage);
+      alert("Có lỗi xảy ra khi xóa thiết bị!");
     }
   };
 
-  if (loading) {
-    return <div className="admin-loading">Đang tải...</div>;
-  }
-
   const handleExport = async () => {
     try {
-      const response = await api.get("/admin/assets/export", {
+      const response = await api.get("/admin/export/assets", {
         responseType: "blob",
       });
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", "thiet-bi.xlsx");
+      link.setAttribute(
+        "download",
+        `danh-sach-thiet-bi-${new Date().getTime()}.xlsx`,
+      );
       document.body.appendChild(link);
       link.click();
       link.remove();
+      window.URL.revokeObjectURL(url);
       alert("Xuất file Excel thành công!");
     } catch (error) {
       console.error("Error exporting:", error);
@@ -213,43 +181,33 @@ const AdminDevices = () => {
   const handleImport = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
     if (!file.name.endsWith(".xlsx") && !file.name.endsWith(".xls")) {
-      alert("Vui lòng chọn file Excel (.xlsx hoặc .xls)!");
+      alert("Vui lòng chọn file Excel!");
       return;
     }
-
-    const formData = new FormData();
-    formData.append("file", file);
-
+    const data = new FormData();
+    data.append("file", file);
     try {
-      // Không set Content-Type, để axios tự động set với boundary
-      const response = await api.post("/admin/assets/import", formData, {
-        timeout: 60000, // 60 seconds timeout
-      });
-      alert(response.data.message || "Import thành công!");
+      await api.post("/admin/import/assets", data);
+      alert("Import thành công!");
       fetchAssets();
-      e.target.value = ""; // Reset file input
     } catch (error) {
       console.error("Error importing:", error);
-      let errorMessage = "Có lỗi xảy ra khi import file!";
-      if (error.response?.data?.error) {
-        errorMessage = error.response.data.error;
-      } else if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      }
-      alert(errorMessage);
-      e.target.value = ""; // Reset file input
+      alert("Có lỗi xảy ra khi import file!");
+    } finally {
+      e.target.value = "";
     }
   };
 
+  if (loading) return <div className="admin-loading">Đang tải...</div>;
+
   return (
-    <div>
+    <div className="admin-devices-page">
       <div className="admin-search-bar" style={{ marginBottom: "24px" }}>
         <input
           type="text"
           className="admin-search-input"
-          placeholder="Tìm kiếm thiết bị (tên, mã, trạng thái, nhà cung cấp)..."
+          placeholder="Tìm kiếm thiết bị..."
           value={searchKeyword}
           onChange={(e) => setSearchKeyword(e.target.value)}
         />
@@ -266,7 +224,10 @@ const AdminDevices = () => {
               style={{ display: "none" }}
             />
           </label>
-          <button className="admin-button admin-button-primary" onClick={handleCreate}>
+          <button
+            className="admin-button admin-button-primary"
+            onClick={handleCreate}
+          >
             Thêm thiết bị
           </button>
         </div>
@@ -276,21 +237,32 @@ const AdminDevices = () => {
         <div className="admin-form-container">
           <h3>{editingAsset ? "Sửa thiết bị" : "Thêm thiết bị mới"}</h3>
           <form onSubmit={handleSubmit}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: "12px",
+                marginBottom: "16px",
+              }}
+            >
               <input
                 type="text"
                 className="admin-input"
-                placeholder="Mã thiết bị"
+                placeholder="Mã"
                 value={formData.itemCode}
-                onChange={(e) => setFormData({ ...formData, itemCode: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, itemCode: e.target.value })
+                }
                 required
               />
               <input
                 type="text"
                 className="admin-input"
-                placeholder="Tên thiết bị"
+                placeholder="Tên"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
                 required
               />
               <input
@@ -298,70 +270,101 @@ const AdminDevices = () => {
                 className="admin-input"
                 placeholder="Đơn vị"
                 value={formData.unit}
-                onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, unit: e.target.value })
+                }
               />
               <input
                 type="number"
                 className="admin-input"
-                placeholder="Năm sử dụng"
+                placeholder="Năm sử dùng"
                 value={formData.yearInUse}
-                onChange={(e) => setFormData({ ...formData, yearInUse: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, yearInUse: e.target.value })
+                }
               />
               <input
                 type="text"
                 className="admin-input"
                 placeholder="Trạng thái"
                 value={formData.statusDetail}
-                onChange={(e) => setFormData({ ...formData, statusDetail: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, statusDetail: e.target.value })
+                }
               />
               <input
                 type="text"
                 className="admin-input"
-                placeholder="Nhà cung cấp"
+                placeholder="NCC"
                 value={formData.supplier}
-                onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, supplier: e.target.value })
+                }
               />
               <input
                 type="text"
                 className="admin-input"
-                placeholder="Vị trí lưu trữ"
+                placeholder="Vị trí"
                 value={formData.storageLocation}
-                onChange={(e) => setFormData({ ...formData, storageLocation: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, storageLocation: e.target.value })
+                }
               />
               <input
                 type="number"
                 className="admin-input"
                 placeholder="Giá gốc"
                 value={formData.originalPrice}
-                onChange={(e) => setFormData({ ...formData, originalPrice: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, originalPrice: e.target.value })
+                }
               />
               <input
                 type="number"
                 className="admin-input"
-                placeholder="Số lượng kế toán"
+                placeholder="SL kế toán"
                 value={formData.accountingQuantity}
-                onChange={(e) => setFormData({ ...formData, accountingQuantity: e.target.value })}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    accountingQuantity: e.target.value,
+                  })
+                }
               />
               <input
                 type="number"
                 className="admin-input"
-                placeholder="Số lượng tồn kho"
+                placeholder="SL tồn kho"
                 value={formData.inventoryQuantity}
-                onChange={(e) => setFormData({ ...formData, inventoryQuantity: e.target.value })}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    inventoryQuantity: e.target.value,
+                  })
+                }
               />
               <input
                 type="number"
                 className="admin-input"
                 placeholder="Giá trị còn lại"
                 value={formData.residualValue}
-                onChange={(e) => setFormData({ ...formData, residualValue: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, residualValue: e.target.value })
+                }
               />
             </div>
             <div style={{ display: "flex", gap: "12px" }}>
-              <button type="submit" className="admin-button admin-button-primary">
+              <button
+                type="submit"
+                className="admin-button admin-button-primary"
+              >
                 {editingAsset ? "Cập nhật" : "Tạo mới"}
               </button>
-              <button type="button" className="admin-button" onClick={() => setShowForm(false)}>
+              <button
+                type="button"
+                className="admin-button"
+                onClick={() => setShowForm(false)}
+              >
                 Hủy
               </button>
             </div>
@@ -370,59 +373,50 @@ const AdminDevices = () => {
       )}
 
       <div className="admin-table-container">
-        <div className="admin-section-header">
-          <h3>Danh sách thiết bị</h3>
-        </div>
-        {assets.length === 0 ? (
-          <div className="admin-empty">
-            <p>Không có thiết bị nào.</p>
-          </div>
-        ) : (
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>Mã</th>
-                <th>Tên</th>
-                <th>Trạng thái</th>
-                <th>Số lượng</th>
-                <th>Vị trí</th>
-                <th>Hành động</th>
+        <table className="admin-table">
+          <thead>
+            <tr>
+              <th>Mã</th>
+              <th>Tên</th>
+              <th>Trạng thái</th>
+              <th>Số lượng</th>
+              <th>Vị trí</th>
+              <th>Hành động</th>
+            </tr>
+          </thead>
+          <tbody>
+            {assets.map((asset) => (
+              <tr key={asset.itemId}>
+                <td>{asset.itemCode}</td>
+                <td>{asset.name}</td>
+                <td>{asset.statusDetail || "N/A"}</td>
+                <td>
+                  KT: {asset.accountingQuantity || 0} | TK:{" "}
+                  {asset.inventoryQuantity || 0}
+                </td>
+                <td>{asset.storageLocation || "N/A"}</td>
+                <td>
+                  <button
+                    className="admin-button"
+                    onClick={() => handleEdit(asset)}
+                    style={{ marginRight: "8px" }}
+                  >
+                    Sửa
+                  </button>
+                  <button
+                    className="admin-button admin-button-danger"
+                    onClick={() => handleDelete(asset.itemId)}
+                  >
+                    Xóa
+                  </button>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {assets.map((asset) => (
-                <tr key={asset.itemId}>
-                  <td>{asset.itemCode}</td>
-                  <td>{asset.name}</td>
-                  <td>{asset.statusDetail || "N/A"}</td>
-                  <td>
-                    Kế toán: {asset.accountingQuantity || 0} | Tồn kho: {asset.inventoryQuantity || 0}
-                  </td>
-                  <td>{asset.storageLocation || "N/A"}</td>
-                  <td>
-                    <button
-                      className="admin-button"
-                      onClick={() => handleEdit(asset)}
-                      style={{ marginRight: "8px" }}
-                    >
-                      Sửa
-                    </button>
-                    <button
-                      className="admin-button admin-button-danger"
-                      onClick={() => handleDelete(asset.itemId)}
-                    >
-                      Xóa
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
 };
 
 export default AdminDevices;
-

@@ -1,5 +1,6 @@
 package com.example.springmvc.security;
 
+import com.example.springmvc.constant.RoleConst;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -32,9 +33,18 @@ public class JwtUtils {
     }
 
     public String generateToken(String username, String role) {
+        String springRole = role;
+        if ("ADMIN".equalsIgnoreCase(role)) {
+            springRole = RoleConst.ADMIN;
+        } else if ("TEACHER".equalsIgnoreCase(role)) {
+            springRole = RoleConst.TEACHER;
+        } else if (role != null && !role.startsWith("ROLE_")) {
+            springRole = "ROLE_" + role;
+        }
+
         return Jwts.builder()
                 .subject(username)
-                .claim("role", role)
+                .claim("role", springRole)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expirationTime))
                 .signWith(key)

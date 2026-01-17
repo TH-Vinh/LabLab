@@ -15,7 +15,6 @@ import java.util.List;
 
 @Data
 public class RentRequest {
-
     @NotNull(message = "Vui lòng chọn phòng thí nghiệm")
     private Integer roomId;
 
@@ -33,9 +32,7 @@ public class RentRequest {
 
     @AssertTrue(message = "Ngày trả dự kiến phải sau thời gian bắt đầu mượn!")
     public boolean isValidDateRange() {
-        if (borrowDate == null || expectedReturnDate == null) {
-            return true;
-        }
+        if (borrowDate == null || expectedReturnDate == null) return true;
         return expectedReturnDate.isAfter(borrowDate);
     }
 

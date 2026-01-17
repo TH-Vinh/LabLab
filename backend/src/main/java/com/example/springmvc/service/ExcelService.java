@@ -1,29 +1,13 @@
 package com.example.springmvc.service;
 
-import com.example.springmvc.dto.AssetResponseDTO;
-import com.example.springmvc.dto.ChemicalResponseDTO;
+import com.example.springmvc.dto.item.AssetResponse;
+import com.example.springmvc.dto.item.ChemicalResponse;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.util.List;
 
 public interface ExcelService {
-    /**
-     * Export danh sách hóa chất ra file Excel
-     */
-    byte[] exportChemicalsToExcel(List<ChemicalResponseDTO> chemicals);
-
-    /**
-     * Export danh sách thiết bị ra file Excel
-     */
-    byte[] exportAssetsToExcel(List<AssetResponseDTO> assets);
-
-    /**
-     * Import hóa chất từ file Excel
-     */
-    List<ChemicalResponseDTO> importChemicalsFromExcel(MultipartFile file);
-
-    /**
-     * Import thiết bị từ file Excel
-     */
-    List<AssetResponseDTO> importAssetsFromExcel(MultipartFile file);
+    byte[] exportChemicalsToExcel(List<ChemicalResponse> chemicals);
+    byte[] exportAssetsToExcel(List<AssetResponse> assets);
+    List<ChemicalResponse> importChemicalsFromExcel(MultipartFile file);
+    List<AssetResponse> importAssetsFromExcel(MultipartFile file);
 }

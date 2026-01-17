@@ -13,6 +13,9 @@ import {
   Package,
   Factory,
   Calendar,
+  ChevronLeft,
+  ChevronRight,
+  MoreHorizontal,
 } from "lucide-react";
 import "./TeacherWiki.css";
 
@@ -25,6 +28,9 @@ const TeacherWiki = () => {
   const [activeTab, setActiveTab] = useState("all");
   const [selectedItem, setSelectedItem] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 12;
 
   useEffect(() => {
     if (queryKeyword) {
@@ -48,7 +54,6 @@ const TeacherWiki = () => {
 
   useEffect(() => {
     const fetchItems = async () => {
-      setLoading(true);
       try {
         const token = localStorage.getItem("token");
         if (!token) return;
@@ -58,6 +63,7 @@ const TeacherWiki = () => {
         if (activeTab === "machine") categoryParam = "DEVICE";
         if (activeTab === "tool") categoryParam = "TOOL";
 
+        setLoading(true);
         const response = await api.get("/items", {
           headers: { Authorization: `Bearer ${token}` },
           params: {
@@ -67,8 +73,9 @@ const TeacherWiki = () => {
         });
 
         setItems(response.data);
+        setCurrentPage(1);
       } catch (error) {
-        console.error("Lỗi tải dữ liệu:", error);
+        console.error(error);
       } finally {
         setLoading(false);
       }
@@ -80,6 +87,54 @@ const TeacherWiki = () => {
 
     return () => clearTimeout(timeoutId);
   }, [activeTab, searchTerm]);
+
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = items.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(items.length / itemsPerPage);
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const renderPagination = () => {
+    const pages = [];
+    const maxVisiblePages = 5;
+
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (currentPage > 3) pages.push("...");
+
+      let start = Math.max(2, currentPage - 1);
+      let end = Math.min(totalPages - 1, currentPage + 1);
+
+      if (currentPage <= 2) end = 4;
+      if (currentPage >= totalPages - 1) start = totalPages - 3;
+
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+
+      if (currentPage < totalPages - 2) pages.push("...");
+      pages.push(totalPages);
+    }
+
+    return pages.map((page, index) => (
+      <button
+        key={index}
+        className={`page-num-btn ${currentPage === page ? "active" : ""} ${
+          page === "..." ? "dots" : ""
+        }`}
+        disabled={page === "..."}
+        onClick={() => page !== "..." && handlePageChange(page)}
+      >
+        {page === "..." ? <MoreHorizontal size={14} /> : page}
+      </button>
+    ));
+  };
 
   const getEmoji = (type) => {
     if (type === "CHEMICAL") return "🧪";
@@ -159,8 +214,8 @@ const TeacherWiki = () => {
           <div className="no-result">
             <p>⏳ Đang tải dữ liệu...</p>
           </div>
-        ) : items.length > 0 ? (
-          items.map((item) => (
+        ) : currentItems.length > 0 ? (
+          currentItems.map((item) => (
             <div
               className="wiki-card"
               key={item.itemId}
@@ -207,8 +262,30 @@ const TeacherWiki = () => {
         )}
       </div>
 
+      {!loading && totalPages > 1 && (
+        <div className="pagination-container">
+          <button
+            className="page-btn-arrow"
+            disabled={currentPage === 1}
+            onClick={() => handlePageChange(currentPage - 1)}
+          >
+            <ChevronLeft size={18} />
+          </button>
+
+          <div className="page-numbers">{renderPagination()}</div>
+
+          <button
+            className="page-btn-arrow"
+            disabled={currentPage === totalPages}
+            onClick={() => handlePageChange(currentPage + 1)}
+          >
+            <ChevronRight size={18} />
+          </button>
+        </div>
+      )}
+
       {selectedItem && (
-        <div className="wiki-modal-overlay" onClick={handleCloseDetail}>
+        <div className="wiki-modal-overlay">
           <div
             className="wiki-modal-content"
             onClick={(e) => e.stopPropagation()}

@@ -26,15 +26,12 @@ public class ItemServiceImpl implements ItemService {
     @Override
     @Transactional(readOnly = true)
     public List<ItemResponse> searchItems(String category, String keyword, boolean fetchStock) {
-
         List<Item> rawItems = queryItems(category, keyword);
-
         List<ItemResponse> dtos = convertToDtoList(rawItems);
 
         if (!fetchStock) {
             dtos.forEach(dto -> dto.setAvailableQuantity(null));
         }
-
         return dtos;
     }
 
@@ -45,15 +42,12 @@ public class ItemServiceImpl implements ItemService {
         if (hasCategory && hasKeyword) {
             return itemRepository.searchByCategoryAndKeyword(category.trim(), keyword.trim());
         }
-
         if (hasKeyword) {
             return itemRepository.searchGlobal(keyword.trim());
         }
-
         if (hasCategory) {
             return itemRepository.findByCategoryType(category.trim());
         }
-
         return itemRepository.findAll();
     }
 

@@ -14,9 +14,8 @@ const TeacherBorrow = () => {
   const [rooms, setRooms] = useState([]);
   const [basket, setBasket] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  // State lưu trữ logs Real-time
   const [liveLogs, setLiveLogs] = useState([]);
+  const [refreshHistoryTrigger, setRefreshHistoryTrigger] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -30,9 +29,13 @@ const TeacherBorrow = () => {
 
         setInventory(itemRes.data);
         setRooms(roomRes.data);
-        setLiveLogs(logRes.data);
+
+        const activeLogs = logRes.data.filter((log) =>
+          ["PENDING", "APPROVED"].includes(log.status)
+        );
+        setLiveLogs(activeLogs);
       } catch (error) {
-        console.error("Lỗi tải dữ liệu:", error);
+        console.error(error);
         Swal.fire("Lỗi", "Không thể tải dữ liệu kho hoặc phòng!", "error");
       } finally {
         setLoading(false);
@@ -41,7 +44,6 @@ const TeacherBorrow = () => {
     fetchData();
   }, []);
 
-  // 2. KẾT NỐI WEBSOCKET
   useEffect(() => {
     let stompClient = null;
 
@@ -60,6 +62,19 @@ const TeacherBorrow = () => {
                   const newLog = JSON.parse(message.body);
 
                   setLiveLogs((prevLogs) => {
+                    if (
+                      [
+                        "RETURNED",
+                        "RETURNED_WITH_ISSUES",
+                        "REJECTED",
+                        "CANCELLED",
+                      ].includes(newLog.status)
+                    ) {
+                      return prevLogs.filter(
+                        (t) => t.ticketId !== newLog.ticketId
+                      );
+                    }
+
                     const index = prevLogs.findIndex(
                       (log) => log.ticketId === newLog.ticketId
                     );
@@ -69,21 +84,23 @@ const TeacherBorrow = () => {
                       updatedLogs[index] = newLog;
                       return updatedLogs;
                     } else {
-                      return [newLog, ...prevLogs];
+                      return [newLog, ...prevLogs].slice(0, 10);
                     }
                   });
+
+                  setRefreshHistoryTrigger((prev) => prev + 1);
                 } catch (e) {
-                  console.error("Lỗi parse JSON socket:", e);
+                  console.error(e);
                 }
               }
             });
           },
           (error) => {
-            console.error("❌ Lỗi kết nối Socket:", error);
+            console.error(error);
           }
         );
       } catch (err) {
-        console.error("Lỗi khởi tạo SockJS:", err);
+        console.error(err);
       }
     };
 
@@ -96,7 +113,6 @@ const TeacherBorrow = () => {
     };
   }, []);
 
-  // --- Logic Giỏ Hàng & Submit ---
   const handleToggleBasket = (item) => {
     setBasket((prev) => {
       const exists = prev.find((i) => i.id === item.itemId);
@@ -142,8 +158,11 @@ const TeacherBorrow = () => {
       });
 
       setBasket([]);
+      const itemRes = await api.get("/items", { params: { fetchStock: true } });
+      setInventory(itemRes.data);
+      setRefreshHistoryTrigger((prev) => prev + 1);
     } catch (error) {
-      console.error("Lỗi tạo phiếu:", error);
+      console.error(error);
       const errorMsg =
         error.response?.data?.message || "Có lỗi xảy ra khi tạo phiếu mượn!";
       Swal.fire({
@@ -178,7 +197,7 @@ const TeacherBorrow = () => {
 
       <div className="bottom-section-grid">
         <LiveMonitor logs={liveLogs} />
-        <UserHistory />
+        <UserHistory refreshTrigger={refreshHistoryTrigger} />
       </div>
     </div>
   );

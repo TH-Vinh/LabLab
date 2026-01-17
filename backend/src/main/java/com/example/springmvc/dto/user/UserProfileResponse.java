@@ -7,7 +7,6 @@ public class UserProfileResponse {
     private Integer userId;
     private String username;
     private String role;
-
     private String fullName;
     private String email;
     private String phoneNumber;

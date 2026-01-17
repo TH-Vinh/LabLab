@@ -39,9 +39,7 @@ public class AuthServiceImpl implements AuthService {
                         .orElse("");
 
                 if (RoleConst.ADMIN.equals(role) || RoleConst.TEACHER.equals(role)) {
-
                     String token = jwtUtils.generateToken(request.getUsername(), role);
-
                     response.setSuccess(true);
                     response.setMessage("Đăng nhập thành công!");
                     response.setToken(token);
@@ -56,7 +54,6 @@ public class AuthServiceImpl implements AuthService {
             response.setSuccess(false);
             response.setMessage("Sai tài khoản hoặc mật khẩu!");
         }
-
         return response;
     }
 }

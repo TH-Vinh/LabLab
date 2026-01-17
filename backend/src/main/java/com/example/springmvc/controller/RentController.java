@@ -1,8 +1,6 @@
 package com.example.springmvc.controller;
 
-import com.example.springmvc.dto.rent.RentListResponse;
-import com.example.springmvc.dto.rent.RentRequest;
-import com.example.springmvc.entity.RentTicket;
+import com.example.springmvc.dto.rent.*;
 import com.example.springmvc.service.RentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +17,6 @@ public class RentController {
 
     private final RentService rentService;
 
-    // Tạo phiếu mượn mới
     @PostMapping("/create")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> createRentRequest(@Valid @RequestBody RentRequest request) {
@@ -27,19 +24,27 @@ public class RentController {
         return ResponseEntity.ok(Map.of("message", "Gửi yêu cầu thành công! Vui lòng chờ Admin duyệt."));
     }
 
-    // Duyệt hoặc từ chối phiếu (Admin)
-    @PostMapping("/review/{id}")
+    @PostMapping("/review/{id}/{status}")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<?> reviewTicket(
             @PathVariable("id") Integer id,
-            @RequestParam("status") String status
+            @PathVariable("status") String status
     ) {
         rentService.reviewRentTicket(id, status);
         String msg = "APPROVED".equalsIgnoreCase(status) ? "Đã DUYỆT phiếu mượn!" : "Đã TỪ CHỐI phiếu mượn!";
         return ResponseEntity.ok(Map.of("message", msg));
     }
 
-    // Lấy danh sách tất cả các phiếu (Admin) - Lọc ?status=PENDING
+    @PostMapping("/return")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> returnTicket(@Valid @RequestBody ReturnRequest request) {
+        rentService.returnTicket(request);
+        return ResponseEntity.ok(Map.of(
+                "message", "Xác nhận trả vật tư/phòng thành công!",
+                "ticketId", request.getTicketId()
+        ));
+    }
+
     @GetMapping("/list")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<List<RentListResponse>> getAllTickets(
@@ -48,7 +53,6 @@ public class RentController {
         return ResponseEntity.ok(rentService.getAllTickets(status));
     }
 
-    // Lấy dữ liệu (user)
     @GetMapping("/monitor-all")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<RentListResponse>> getMonitorAllTickets(
@@ -57,28 +61,24 @@ public class RentController {
         return ResponseEntity.ok(rentService.getAllTickets(status));
     }
 
-    // Lấy lịch sử mượn của một user bất kỳ theo ID
     @GetMapping("/user/{userId}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<RentListResponse>> getHistoryByUser(@PathVariable("userId") Integer userId) {
         return ResponseEntity.ok(rentService.getRentHistoryByUserId(userId));
     }
 
-    // Lấy lịch sử của người đang đăng nhập
     @GetMapping("/history")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<RentListResponse>> getMyHistory() {
         return ResponseEntity.ok(rentService.getMyRentHistory());
     }
 
-    // Xem chi tiết một phiếu (Admin hoặc chính chủ)
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<RentTicket> getTicketDetail(@PathVariable("id") Integer id) {
+    public ResponseEntity<RentDetailResponse> getTicketDetail(@PathVariable("id") Integer id) {
         return ResponseEntity.ok(rentService.getTicketDetail(id));
     }
 
-    // Lấy 5 phiếu mới nhất
     @GetMapping("/recent-activity")
     public ResponseEntity<List<RentListResponse>> getRecentActivity() {
         return ResponseEntity.ok(rentService.getRecentActivity());

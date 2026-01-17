@@ -13,7 +13,7 @@ import api from "../../../../../services/api";
 import "./UserHistory.css";
 import TicketDetailModal from "./TicketDetailModal";
 
-const UserHistory = () => {
+const UserHistory = ({ refreshTrigger }) => {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -25,7 +25,7 @@ const UserHistory = () => {
 
   const fetchHistory = async () => {
     try {
-      setLoading(true);
+      if (history.length === 0) setLoading(true);
       const response = await api.get("/rent/history");
       setHistory(response.data);
     } catch (error) {
@@ -37,7 +37,7 @@ const UserHistory = () => {
 
   useEffect(() => {
     fetchHistory();
-  }, []);
+  }, [refreshTrigger]);
 
   const handleViewDetail = async (ticketId) => {
     setSelectedTicket({});
@@ -86,6 +86,8 @@ const UserHistory = () => {
         return "Từ chối";
       case "RETURNED":
         return "Đã trả";
+      case "RETURNED_WITH_ISSUES":
+        return "Đã trả (Có lỗi)";
       default:
         return status;
     }
@@ -100,7 +102,6 @@ const UserHistory = () => {
 
   return (
     <>
-      {/* --- WIDGET DASHBOARD --- */}
       <div className="dashboard-card history-container">
         <div className="card-header">
           <h3>
@@ -143,7 +144,6 @@ const UserHistory = () => {
         </div>
       </div>
 
-      {/* --- MODAL 1: DANH SÁCH TỔNG --- */}
       {showListModal && (
         <div
           className="modal-overlay-custom"
@@ -215,7 +215,6 @@ const UserHistory = () => {
         </div>
       )}
 
-      {/* --- MODAL 2: CHI TIẾT --- */}
       {selectedTicket && (
         <TicketDetailModal
           ticket={selectedTicket}

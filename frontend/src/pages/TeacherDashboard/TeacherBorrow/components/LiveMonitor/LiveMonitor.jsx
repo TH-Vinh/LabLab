@@ -35,16 +35,22 @@ const LiveMonitor = ({ logs }) => {
   const translateStatus = (status) => {
     switch (status) {
       case "PENDING":
-        return "CHỜ DUYỆT";
+        return { text: "CHỜ DUYỆT", class: "status-pending" };
       case "APPROVED":
-        return "ĐÃ DUYỆT";
+        return { text: "ĐANG MƯỢN", class: "status-approved" };
       case "REJECTED":
-        return "TỪ CHỐI";
+        return { text: "TỪ CHỐI", class: "status-rejected" };
       case "RETURNED":
-        return "ĐÃ TRẢ";
+        return { text: "ĐÃ TRẢ", class: "status-returned" };
+      case "RETURNED_WITH_ISSUES":
+        return { text: "CÓ SỰ CỐ", class: "status-issue" };
       default:
-        return status;
+        return { text: status, class: "" };
     }
+  };
+
+  const getDisplayName = (name) => {
+    return name || "Người dùng hệ thống";
   };
 
   const handleViewAll = () => {
@@ -59,7 +65,13 @@ const LiveMonitor = ({ logs }) => {
       const response = await api.get("/rent/monitor-all", {
         params: { status: status === "ALL" ? "" : status },
       });
-      setAllTickets(response.data);
+      let filtered = response.data;
+      if (status === "ALL") {
+        filtered = response.data.filter((t) =>
+          ["PENDING", "APPROVED"].includes(t.status)
+        );
+      }
+      setAllTickets(filtered);
     } catch (error) {
       console.error("Lỗi tải danh sách:", error);
     } finally {
@@ -68,10 +80,9 @@ const LiveMonitor = ({ logs }) => {
   };
 
   const filterOptions = [
-    { key: "ALL", label: "Tất cả", icon: <ListFilter size={16} /> },
+    { key: "ALL", label: "Tất cả (Active)", icon: <ListFilter size={16} /> },
     { key: "PENDING", label: "Chờ duyệt", icon: <Clock size={16} /> },
-    { key: "APPROVED", label: "Đã duyệt", icon: <CheckCircle2 size={16} /> },
-    { key: "REJECTED", label: "Từ chối", icon: <XCircle size={16} /> },
+    { key: "APPROVED", label: "Đang mượn", icon: <CheckCircle2 size={16} /> },
   ];
 
   return (
@@ -85,7 +96,7 @@ const LiveMonitor = ({ logs }) => {
           <button
             className="view-all-btn"
             onClick={handleViewAll}
-            title="Xem tất cả"
+            title="Xem tất cả phòng đang mượn"
           >
             <Maximize2 size={14} /> Xem tất cả
           </button>
@@ -93,24 +104,29 @@ const LiveMonitor = ({ logs }) => {
 
         <div className="log-scroll">
           {logs && logs.length > 0 ? (
-            logs.slice(0, 5).map((log) => (
-              <div key={log.ticketId} className="row-log">
-                <div className="log-info">
-                  <div className="room-name">{log.roomName}</div>
-                  <div className="teacher-name">{log.borrowerName}</div>
-                </div>
-                <div className="log-status">
-                  <span className={`status-tag ${log.status}`}>
-                    {translateStatus(log.status)}
-                  </span>
-                  <div className="log-time">
-                    {formatTime(log.createdDate || log.borrowDate)}
+            logs.slice(0, 5).map((log) => {
+              const statusInfo = translateStatus(log.status);
+              return (
+                <div key={log.ticketId} className="row-log">
+                  <div className="log-info">
+                    <div className="room-name">{log.roomName}</div>
+                    <div className="teacher-name">
+                      {getDisplayName(log.borrowerName)}
+                    </div>
+                  </div>
+                  <div className="log-status">
+                    <span className={`status-tag ${statusInfo.class}`}>
+                      {statusInfo.text}
+                    </span>
+                    <div className="log-time">
+                      {formatTime(log.createdDate || log.borrowDate)}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           ) : (
-            <p className="empty-msg">Chưa có hoạt động mới...</p>
+            <p className="empty-msg">Hiện chưa có phòng nào đang được mượn.</p>
           )}
         </div>
       </div>
@@ -125,7 +141,13 @@ const LiveMonitor = ({ logs }) => {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="modal-header-custom">
-              <h3>📋 Danh sách hoạt động</h3>
+              <h3>📋 Danh sách phòng đang hoạt động</h3>
+              <button
+                className="btn-close-modal"
+                onClick={() => setShowAllModal(false)}
+              >
+                <XCircle size={24} />
+              </button>
             </div>
 
             <div className="filter-container">
@@ -152,7 +174,7 @@ const LiveMonitor = ({ logs }) => {
                 </div>
               ) : allTickets.length === 0 ? (
                 <div className="empty-state-modal">
-                  <p>Không tìm thấy phiếu nào ở trạng thái này.</p>
+                  <p>Không có dữ liệu.</p>
                 </div>
               ) : (
                 <table className="full-width-table">
@@ -165,22 +187,25 @@ const LiveMonitor = ({ logs }) => {
                     </tr>
                   </thead>
                   <tbody>
-                    {allTickets.map((t) => (
-                      <tr key={t.ticketId}>
-                        <td>
-                          <strong>{t.roomName}</strong>
-                        </td>
-                        <td>{t.borrowerName}</td>
-                        <td>
-                          <span className={`status-tag ${t.status}`}>
-                            {translateStatus(t.status)}
-                          </span>
-                        </td>
-                        <td className="time-col">
-                          {formatTime(t.createdDate || t.borrowDate)}
-                        </td>
-                      </tr>
-                    ))}
+                    {allTickets.map((t) => {
+                      const statusInfo = translateStatus(t.status);
+                      return (
+                        <tr key={t.ticketId}>
+                          <td>
+                            <strong>{t.roomName}</strong>
+                          </td>
+                          <td>{getDisplayName(t.borrowerName)}</td>
+                          <td>
+                            <span className={`status-tag ${statusInfo.class}`}>
+                              {statusInfo.text}
+                            </span>
+                          </td>
+                          <td className="time-col">
+                            {formatTime(t.createdDate || t.borrowDate)}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               )}

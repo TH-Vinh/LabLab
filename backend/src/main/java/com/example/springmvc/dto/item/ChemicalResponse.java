@@ -1,13 +1,12 @@
-package com.example.springmvc.dto;
+package com.example.springmvc.dto.item;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
-public class ChemicalResponseDTO {
+public class ChemicalResponse {
     private Integer itemId;
     private String itemCode;
     private String name;
@@ -16,10 +15,10 @@ public class ChemicalResponseDTO {
     private BigDecimal currentQuantity;
     private BigDecimal lockedQuantity;
     private Integer yearInUse;
-    
+
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
-    
+
     // Chemical specific
     private String formula;
     private String supplier;
@@ -27,4 +26,3 @@ public class ChemicalResponseDTO {
     private String storageLocation;
     private BigDecimal originalPrice;
 }
-
